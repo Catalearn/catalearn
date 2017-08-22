@@ -6,11 +6,11 @@ __Catalearn__ is a python module that allows you to run code on a cloud gpu. It 
 
 ## Installation
 
-`sudo pip3 install catalearn`
+`python -m pip install catalearn`
 
 ## Update
 
-`sudo pip3 install -U catalearn`
+`python -m pip install catalearn`
 
 ## Usage
 First register for a key on www.catalearn.com.
