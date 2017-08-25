@@ -5,10 +5,16 @@
 __Catalearn__ is a python module that allows you to run code on a cloud gpu. It allows you to easily leverage the computing power of GPUs without having to manage and maintain the infrastructure. 
 
 ## Installation
+`pip install catalearn`
+
+or
 
 `python -m pip install catalearn`
 
 ## Update
+`pip install -U catalearn`
+
+or
 
 `python -m pip install -U catalearn`
 
@@ -26,7 +32,8 @@ def gpu_function(data):
     return 'here is the result'
 
 result = gpu_function('a lot of data')
-# This will run the function on a cloud gpu and return the result
+print(result)
+# prints "here is the result"
 ```
 
 ## Example 
@@ -37,25 +44,29 @@ Replace <YOUR_API_KEY> with the key you generated from [Catalearn](www.catalearn
 ```
 from keras.datasets import mnist
 import pandas as pd
+
 import catalearn
+# login to catalearn
 catalearn.login(<YOUR_API_KEY>)
 
+# load the MNIST dataset
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
+# process the data
 x_train_reshape = x_train.reshape(x_train.shape[0], 28, 28, 1)
 x_test_reshape = x_test.reshape(x_test.shape[0], 28, 28, 1)
-
 y_train_onehot = pd.get_dummies(y_train).as_matrix()
 y_test_onehot = pd.get_dummies(y_test).as_matrix()
 
+# this decorator runs the function in a cloud GPU
 @catalearn.run_on_gpu
-def gpu_func(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot):
+def train(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot):
 
+    # need to import the libraries in the function to use the GPU accelerated versions
     from keras.models import Sequential
     from keras.layers import Dense, Activation, Conv2D, Flatten, MaxPooling2D
 
     model = Sequential()
-
     model.add(Conv2D(32, (3, 3), input_shape=(28, 28, 1)))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Conv2D(64, (3, 3)))
@@ -65,14 +76,17 @@ def gpu_func(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot):
     model.add(Activation('softmax'))
 
     model.compile(loss='categorical_crossentropy', optimizer='Adadelta', metrics=['accuracy'])
-    model.fit(x_train_reshape, y_train_onehot, epochs=5, batch_size=32)
+    model.fit(x_train_reshape, y_train_onehot, epochs=1, batch_size=32)
 
-    loss_and_metrics = model.evaluate(x_test_reshape, y_test_onehot, batch_size=512)
-    print("\n\nTrained model has test accuracy {0}".format(loss_and_metrics[1]))
+    # anything saved in the local directory will be downloaded to your local machine
+    model.save('model.h5')
 
-    return model
+    loss_and_metrics = model.evaluate(x_test_reshape, y_test_onehot, batch_size=2048)
 
-model = gpu_func(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot)
+    return loss_and_metrics
+
+loss_and_metrics = train(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot)
+print("Trained model has cost %s and test accuracy %s" % tuple(loss_and_metrics))
 ```
 
 ## Any Questions or Suggestions?
