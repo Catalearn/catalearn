@@ -60,7 +60,7 @@ save()
 ```
 
 ## Example: Train a Convolutional Neural Network on the GPU 
-First run `sudo pip3 install keras pandas` to install the modules needed.
+First run `sudo pip3 install keras tensorflow pandas` to install the modules needed.
 
 Replace <YOUR_API_KEY> with the key you generated from [Catalearn](www.catalearn.com "Title")
 
