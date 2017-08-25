@@ -41,6 +41,8 @@ print(result)
 ### Run and save to file
 Anything you save in the current directory will be downloaded to your local machine.
 
+Replace <YOUR_API_KEY> with the key you generated from [Catalearn](www.catalearn.com "Title")
+
 Run the following code and the file "something.txt" will appear.
 ```
 import catalearn
