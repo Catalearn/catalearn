@@ -36,6 +36,18 @@ print(result)
 # prints "here is the result"
 ```
 
+Anything you save in the current directory will be downloaded to your local machine.
+
+Run the following code and the file "something.txt" will appear.
+```
+@catalearn.run_on_gpu
+def save():
+    with open('something.txt', 'w') as file:
+        file.write('hello world')
+
+save()
+```
+
 ## Example: Train a Convolutional Neural Network on the GPU 
 First run `sudo pip3 install keras pandas` to install the modules needed.
 
@@ -78,7 +90,7 @@ def train(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot):
     model.compile(loss='categorical_crossentropy', optimizer='Adadelta', metrics=['accuracy'])
     model.fit(x_train_reshape, y_train_onehot, epochs=1, batch_size=32)
 
-    # anything saved in the local directory will be downloaded to your local machine
+    # the model will be downloaded to your local machine
     model.save('model.h5')
 
     loss_and_metrics = model.evaluate(x_test_reshape, y_test_onehot, batch_size=2048)
