@@ -5,18 +5,21 @@
 __Catalearn__ is a python module that allows you to run code on a cloud gpu. It allows you to easily leverage the computing power of GPUs without having to manage and maintain the infrastructure. 
 
 ## Installation
-`pip install catalearn`
+
+__Note:__ Catalearn only works on python3
+
+`pip3 install catalearn`
 
 or
 
-`python -m pip install catalearn`
+`python3 -m pip install catalearn`
 
 ## Update
-`pip install -U catalearn`
+`pip3 install -U catalearn`
 
 or
 
-`python -m pip install -U catalearn`
+`python3 -m pip install -U catalearn`
 
 ## Usage
 
