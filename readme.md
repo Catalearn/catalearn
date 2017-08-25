@@ -19,6 +19,8 @@ or
 `python -m pip install -U catalearn`
 
 ## Usage
+
+### Run and return result
 First register for a key on www.catalearn.com.
 
 Then replace <YOUR_API_KEY> with the key you generated.
@@ -36,10 +38,14 @@ print(result)
 # prints "here is the result"
 ```
 
+### Run and save to file
 Anything you save in the current directory will be downloaded to your local machine.
 
 Run the following code and the file "something.txt" will appear.
 ```
+import catalearn
+catalearn.login(<YOUR_API_KEY>)
+
 @catalearn.run_on_gpu
 def save():
     with open('something.txt', 'w') as file:
