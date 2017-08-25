@@ -7,6 +7,7 @@ import json
 import dill
 from tqdm import tqdm
 import sys
+import io
 from zipfile import ZipFile
 from os import path, remove
 from .settings import settings
@@ -113,48 +114,57 @@ def stream_output(gpuIp, wsPort, jobHash):
         ws.close()
         return outUrl
 
+def fixBadZipfile(zipFile):  
+     f = open(zipFile, 'r+b')  
+     data = f.read()  
+     pos = data.find('\x50\x4b\x05\x06') # End of central directory signature  
+     if (pos > 0):  
+         print("Truncating file at location " + str(pos + 22) + ".")  
+         f.seek(pos + 22)   # size of 'ZIP end of central directory record' 
+         f.truncate()  
+         f.close()  
+     else:  
+         pass
+         # raise error, file is truncated 
 
 def get_result(outUrl, jobHash):
 
     print("Downloading result")
-    r = requests.post(outUrl, data={'hash': jobHash}, stream=True)
-    if r.status_code != 200:
-        return None
+    print(outUrl)
+    r = requests.post(outUrl, data={'hash': jobHash})
+    statusCheck(r)
 
     totalSize = int(r.headers.get('content-length', 0))
     with open('download.zip', 'wb') as f:
         pbar = tqdm(total=totalSize, unit='B', unit_scale=True)
         chunckSize = 32768
-        for data in r.iter_content(chunckSize):
+        for data in r.iter_content(chunk_size=chunckSize):
             f.write(data)
             pbar.update(chunckSize)
         pbar.close()
 
-    with ZipFile('download.zip', 'r') as zipData:
-        fileNames = zipData.namelist()
-
-        for name in fileNames:
-            data = zipData.read(name)
-            with open(name, 'wb') as file:
-                file.write(data)
+    z = ZipFile(io.BytesIO(r.content))
+    z.extractall()
+    newFiles = z.namelist()
 
     result = None
-
     if path.isfile(jobHash):
         with open(jobHash, "rb") as f:
 
             # import_all()  # Hack: a workaround for dill's pickling problem
             result = dill.load(f)
             # unimport_all()
-            if result is None:
-                print('Computation failed')
             print("Done!")
+            remove(jobHash)
+            newFiles.remove(jobHash)
 
-    remove(jobHash)
     remove('download.zip')
-    fileNames.remove(jobHash)
-    if fileNames:
-        print('New files: %s' % str(fileNames)[1:-1])
+
+    printedNameList = str(newFiles)[1:-1]
+    if len(newFiles) == 1:
+        print('New file: %s' % printedNameList)
+    elif len(newFiles) > 1:
+        print('New files: %s' % printedNameList)
 
     return result
 
