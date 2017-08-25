@@ -1,21 +1,23 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='catalearn',
-    packages=['catalearn'],
-    version='0.1',
+    version='1.0.1b1',
     description='A module for running machine learning code on cloud GPUs',
     url='https://github.com/Catalearn/catalearn',
-    download_url='https://github.com/Catalearn/catalearn/archive/0.1.tar.gz',
     author='Edward Liu',
     author_email='edward@catalearn.com',
     license='MIT',
+    keywords='machinelearning gpu cloud',
+    packages=['catalearn'],
     include_package_data=True,
+    platforms='any',
     install_requires=[
         'dill',
         'requests',
         'websocket-client',
         'requests_toolbelt',
-        'Ipython',
         'tqdm'
-    ])
+    ],
+    python_requires='>=3'
+)

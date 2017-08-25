@@ -2,3 +2,6 @@
 .vscode
 *.pyc
 *.pkl
+build/
+catalearn.egg-info/
+dist/
