@@ -95,7 +95,7 @@ def train(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot):
     model.add(Activation('softmax'))
 
     model.compile(loss='categorical_crossentropy', optimizer='Adadelta', metrics=['accuracy'])
-    model.fit(x_train_reshape, y_train_onehot, epochs=1, batch_size=32)
+    model.fit(x_train_reshape, y_train_onehot, epochs=10, batch_size=32)
 
     # the model will be downloaded to your local machine
     model.save('model.h5')
