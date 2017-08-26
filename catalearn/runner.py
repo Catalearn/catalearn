@@ -3,14 +3,17 @@ import ast
 import re
 import inspect
 import dill
-from .connector import contact_server, upload_data, stream_output, get_result
+from .connector import (contact_server, upload_data, stream_output, 
+    get_result, get_time_and_credit)
 
-def format(sourceLines): # removes indentation
+
+def format(sourceLines):  # removes indentation
     head = sourceLines[0]
     while head[0] == ' ' or head[0] == '\t':
-        sourceLines = [ l[1:] for l in sourceLines]
+        sourceLines = [l[1:] for l in sourceLines]
         head = sourceLines[0]
     return sourceLines
+
 
 def decorate_gpu_func(func):
 
@@ -18,7 +21,7 @@ def decorate_gpu_func(func):
 
         sourceLines = inspect.getsourcelines(func)[0]
         sourceLines = format(sourceLines)
-        sourceLines = sourceLines[1:] # remove the decorator
+        sourceLines = sourceLines[1:]  # remove the decorator
         source = ''.join(sourceLines)
         data = {}
         data['source'] = source
@@ -36,6 +39,7 @@ def decorate_gpu_func(func):
         if not outUrl:
             return None
         result = get_result(outUrl, jobHash)
+        get_time_and_credit(jobHash)
         return result
 
     return gpu_func

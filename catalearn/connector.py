@@ -18,6 +18,7 @@ def statusCheck(res):
         print(res.text)
         sys.exit()
 
+
 def contact_server():
     if settings.LOCAL:
         serverType = 'local'
@@ -85,11 +86,12 @@ def upload_data(gpuIp, jobHash):
             remove('uploads.pkl')
             return True
         except:
-            pbar.close() # need to close before printing anything
+            pbar.close()  # need to close before printing anything
             print('Upload cancelled')
             remove('uploads.pkl')
             return False
-    
+
+
 def stream_output(gpuIp, wsPort, jobHash):
 
     gpuUrl = 'ws://%s:%s' % (gpuIp, wsPort)
@@ -113,6 +115,7 @@ def stream_output(gpuIp, wsPort, jobHash):
     finally:
         ws.close()
         return outUrl
+
 
 def get_result(outUrl, jobHash):
 
@@ -154,4 +157,13 @@ def get_result(outUrl, jobHash):
 
     return result
 
-    
+
+def get_time_and_credit(jobHash):
+    r = requests.post('http://%s/api/gpu/getTimeAndCredit' % settings.CATALEARN_URL,
+                      data={'hash': jobHash})
+    statusCheck(r)
+    res = r.json()
+    jobDuration = res['time']
+    remainingCredits = res['credits']
+    print('The job took %s minutes, you have %s minutes of credit remaining' % (
+        jobDuration, remainingCredits))
