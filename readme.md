@@ -42,7 +42,7 @@ print(result)
 
 ### Run and save to file
 Anything you save in the current directory will be downloaded to your local machine.
- - Replace <YOUR_API_KEY> with the key you generated from [Catalearn](http://www.catalearn.com/dashboard/ "Title")
+ - Replace <YOUR_API_KEY> with the GPU Access Key you generated from [Catalearn](http://www.catalearn.com/dashboard/ "Title")
  - Run the following code and the file "something.txt" will appear.
 ```
 import catalearn
@@ -58,7 +58,7 @@ save()
 
 ## Example: Train a Convolutional Neural Network on the GPU 
  - First run `sudo pip3 install keras tensorflow pandas` to install the modules needed.
- - Replace <YOUR_API_KEY> with the key you generated from [Catalearn](http://www.catalearn.com/dashboard/ "Title")
+ - Replace <YOUR_API_KEY> with the GPU Access key you generated from [Catalearn](http://www.catalearn.com/dashboard/ "Title")
  - After running the code, you will find 'model.h5' in your current directory, this is the trained CNN model!
 ```
 from keras.datasets import mnist
