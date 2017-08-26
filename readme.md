@@ -24,7 +24,7 @@ or
 ## Usage
 
 ### Run and return result
- - First register for a key on www.catalearn.com/dashboard/
+ - First sign up for a key on www.catalearn.com/dashboard/
  - Then replace <YOUR_API_KEY> with the key you generated.
 ```
 import catalearn
