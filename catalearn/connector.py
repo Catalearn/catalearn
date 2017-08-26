@@ -15,7 +15,7 @@ from .settings import settings
 
 def statusCheck(res):
     if res.status_code != 200:
-        print('Oops, looks like something went wrong...')
+        print('Oops, looks like something went wrong, maybe try again later')
         print(res.text)
         sys.exit()
 
