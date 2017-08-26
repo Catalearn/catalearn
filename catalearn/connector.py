@@ -150,10 +150,8 @@ def get_result(outUrl, jobHash):
     remove('download.zip')
 
     printedNameList = str(newFiles)[1:-1]
-    if len(newFiles) == 1:
-        print('New file: %s' % printedNameList)
-    elif len(newFiles) > 1:
-        print('New files: %s' % printedNameList)
+    if len(newFiles) > 0:
+        print('New file%s: %s' % ('' if len(newFiles) == 1 else 's', printedNameList))
 
     return result
 
@@ -165,5 +163,6 @@ def get_time_and_credit(jobHash):
     res = r.json()
     jobDuration = res['time']
     remainingCredits = res['credits']
-    print('The job took %s minutes, you have %s minutes of credit remaining' % (
-        jobDuration, remainingCredits))
+    print('%s minute%s used, you have %s minute%s of credit remaining' % (
+        jobDuration, '' if jobDuration <= 1 else 's',
+        remainingCredits, '' if remainingCredits <= 1 else 's'))
