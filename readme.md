@@ -111,6 +111,7 @@ def train(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot):
 loss_and_metrics = train(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot)
 print("Trained model has cost %s and test accuracy %s" % tuple(loss_and_metrics))
 ```
+After running the code, you will find 'model.h5' in your current directory, this is the trained CNN model!
 
 ## Any Questions or Suggestions?
 Please email _info@catalearn.com_ if you have any questions or suggestions.
