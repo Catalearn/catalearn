@@ -22,7 +22,7 @@ def login(key):
 
 def run_on_gpu(func):
     if settings.API_KEY is None:
-        print('Not Loged in, running code locally instead')
+        print('Not Logged in, running code locally instead')
         return func
     return decorate_gpu_func(func)
 
