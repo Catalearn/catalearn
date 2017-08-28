@@ -121,7 +121,7 @@ def stream_output(gpuIp, wsPort, jobHash):
 def get_result(outUrl, jobHash):
 
     print("Downloading result")
-    r = requests.post(outUrl, data={'hash': jobHash})
+    r = requests.post(outUrl, data={'hash': jobHash}, stream=True)
     statusCheck(r)
 
     totalSize = int(r.headers.get('content-length', 0))
