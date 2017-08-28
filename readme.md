@@ -24,9 +24,8 @@ or
 ## Usage
 
 ### Run and return result
-First register for a key on www.catalearn.com.
-
-Then replace <YOUR_API_KEY> with the key you generated.
+ - First sign up for a key on www.catalearn.com/dashboard/
+ - Then replace <YOUR_API_KEY> with the key you generated.
 ```
 import catalearn
 catalearn.login(<YOUR_API_KEY>)
@@ -43,10 +42,8 @@ print(result)
 
 ### Run and save to file
 Anything you save in the current directory will be downloaded to your local machine.
-
-Replace <YOUR_API_KEY> with the key you generated from [Catalearn](www.catalearn.com "Title")
-
-Run the following code and the file "something.txt" will appear.
+ - Replace <YOUR_API_KEY> with the GPU Access Key you generated from [Catalearn](http://www.catalearn.com/dashboard/ "Title")
+ - Run the following code and the file __"something.txt"__ will appear.
 ```
 import catalearn
 catalearn.login(<YOUR_API_KEY>)
@@ -60,10 +57,9 @@ save()
 ```
 
 ## Example: Train a Convolutional Neural Network on the GPU 
-First run `sudo pip3 install keras tensorflow pandas` to install the modules needed.
-
-Replace <YOUR_API_KEY> with the key you generated from [Catalearn](www.catalearn.com "Title")
-
+ - First run `sudo pip3 install keras tensorflow pandas` to install the modules needed.
+ - Replace <YOUR_API_KEY> with the GPU Access key you generated from [Catalearn](http://www.catalearn.com/dashboard/ "Title")
+ - After running the code, you will find __"model.h5"__ in your current directory, this is the trained CNN model!
 ```
 from keras.datasets import mnist
 import pandas as pd
@@ -99,7 +95,7 @@ def train(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot):
     model.add(Activation('softmax'))
 
     model.compile(loss='categorical_crossentropy', optimizer='Adadelta', metrics=['accuracy'])
-    model.fit(x_train_reshape, y_train_onehot, epochs=1, batch_size=32)
+    model.fit(x_train_reshape, y_train_onehot, epochs=10, batch_size=32)
 
     # the model will be downloaded to your local machine
     model.save('model.h5')
@@ -111,7 +107,6 @@ def train(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot):
 loss_and_metrics = train(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot)
 print("Trained model has cost %s and test accuracy %s" % tuple(loss_and_metrics))
 ```
-After running the code, you will find 'model.h5' in your current directory, this is the trained CNN model!
 
 ## Any Questions or Suggestions?
 Please email _info@catalearn.com_ if you have any questions or suggestions.
