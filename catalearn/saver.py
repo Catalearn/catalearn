@@ -2,6 +2,7 @@ from .settings import settings
 from hashlib import sha1
 import requests
 import json
+import datetime
 
 #Imports that are just used for testing
 import sys
@@ -16,14 +17,8 @@ def save_var_to_cloud(data):
         return
 
     #First get a name unique to this data
-    #Will need to change otherwise user will have new copies of their variable everytime they 
-    #change a value
-    hashing_obj = sha1()
-    if (isinstance(data, str)):
-        hashing_obj.update(bytes(data, 'utf-8'))
-    else:
-        hashing_obj.update(bytes(data))
-    data_name = hashing_obj.digest()
+    #Temp just get time now
+    data_name = str(datetime.datetime.now()).replace(" ", "_")
 
     #Assuming the users hash is equal to their API_KEY. Is it?
     user_hash = settings.API_KEY
@@ -38,9 +33,11 @@ def save_var_to_cloud(data):
         data = {
             "user_hash": user_hash,
             "file_name": data_name,
-            "data": json.dumps(data),
+            "data": data,
         }
     )
     if (server_resp.status_code != 200):
         print("Error saving variable to cloud")
+    else:
+        print("Successfully uploaded data to the cloud")
     return
