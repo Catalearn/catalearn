@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='catalearn',
-    version='1.0.6b1',
+    version='1.0.7b1',
     description='A module for running machine learning code on cloud GPUs',
     url='https://github.com/Catalearn/catalearn',
     author='Edward Liu',
@@ -17,7 +17,8 @@ setup(
         'requests',
         'websocket-client',
         'requests_toolbelt',
-        'tqdm'
+        'tqdm',
+        'bs4'
     ],
     python_requires='>=3'
 )
