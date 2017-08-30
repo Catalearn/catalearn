@@ -23,7 +23,7 @@ def login(key):
 def run_on_gpu(interrupt=True):
     def wrap(func):
         if settings.API_KEY is None:
-            print('Not Loged in, running code locally instead')
+            print('Not Logged in, please use \"catalearn.login()\" to log in first)
             return None
         return decorate_gpu_func(func, interrupt)
     return wrap
