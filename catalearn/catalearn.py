@@ -20,11 +20,16 @@ def login(key):
     else:
         print('Login failed, unverified key')
 
-def run_on_gpu(func):
-    if settings.API_KEY is None:
-        print('Not Loged in, running code locally instead')
-        return func
-    return decorate_gpu_func(func)
+def run_on_gpu(interrupt=True):
+    def wrap(func):
+        if settings.API_KEY is None:
+            print('Not Loged in, running code locally instead')
+            return None
+        return decorate_gpu_func(func, interrupt)
+    return wrap
+
+def get_last_result():
+    pass
 
 def save_data(data):
     pass

@@ -20,7 +20,7 @@ def statusCheck(res):
         sys.exit()
 
 
-def contact_server():
+def contact_server(interrupt):
     if settings.LOCAL:
         serverType = 'local'
     else:
@@ -49,7 +49,8 @@ def contact_server():
         print()
 
     r = requests.post('http://%s/api/gpu/runJob' % settings.CATALEARN_URL,
-                      data={'hash': jobHash})
+                      data={'hash': jobHash,
+                            'interrupt': interrupt})
     statusCheck(r)
     res = r.json()
     gpuIp = res['ip']
@@ -133,7 +134,8 @@ def get_result(outUrl, jobHash):
             pbar.update(chunckSize)
         pbar.close()
 
-    z = ZipFile(io.BytesIO(r.content))
+    zipContent = open("download.zip", "rb").read()
+    z = ZipFile(io.BytesIO(zipContent))
     z.extractall()
     newFiles = z.namelist()
 

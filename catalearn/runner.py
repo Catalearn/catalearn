@@ -7,6 +7,8 @@ from .connector import (contact_server, upload_data, stream_output,
     get_result, get_time_and_credit)
 
 
+currentHash = None
+
 def format(sourceLines):  # removes indentation
     head = sourceLines[0]
     while head[0] == ' ' or head[0] == '\t':
@@ -15,7 +17,16 @@ def format(sourceLines):  # removes indentation
     return sourceLines
 
 
-def decorate_gpu_func(func):
+def retrieveResultFromLastJob():
+    if currentHash is None:
+        return None
+
+    result = get_result(outUrl, jobHash)
+    get_time_and_credit(jobHash)
+    return result
+
+
+def decorate_gpu_func(func, interrupt):
 
     def gpu_func(*args, **kwargs):
 
@@ -31,7 +42,11 @@ def decorate_gpu_func(func):
 
         dill.dump(data, open("uploads.pkl", "wb"))
 
-        gpuIp, wsPort, jobHash = contact_server()
+        gpuIp, wsPort, jobHash = contact_server(interrupt)
+        # if not in interrupt mode, we store the hash 
+        # so that the user can still retrieve the results later
+        if not interrupt:
+            currentHash = jobHash
         success = upload_data(gpuIp, jobHash)
         if not success:
             return None
