@@ -3,7 +3,7 @@ import sys
 import dill
 import inspect
 
-from .runner import decorate_gpu_func
+from .runner import decorate_gpu_func, reconnect_to_job, stop_job
 from .saver import *
 from .admin import verify_key
 from .settings import settings
@@ -20,11 +20,26 @@ def login(key):
     else:
         print('Login failed, unverified key')
 
-def run_on_gpu(func):
+def login_check():
     if settings.API_KEY is None:
-        print('Not Logged in, running code locally instead')
-        return func
-    return decorate_gpu_func(func)
+        print('Not Logged in, please use catalearn.login() to log in first')
+        sys.exit()
+
+def run_on_gpu(func):
+    login_check()
+    return decorate_gpu_func(func, True)
+
+def run_uninterrupted(func):
+    login_check()
+    return decorate_gpu_func(func, False)
+
+def reconnect(jobHash):
+    login_check()
+    return reconnect_to_job(jobHash)
+
+def stop(jobHash):
+    login_check()
+    stop_job(jobHash)
 
 def save_data(data):
     pass

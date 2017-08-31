@@ -16,11 +16,12 @@ from .settings import settings
 def statusCheck(res):
     if res.status_code != 200:
         print('Oops, looks like something went wrong...')
+        print(res.url)
         print(res.text)
         sys.exit()
 
 
-def contact_server():
+def contact_server(interrupt):
     if settings.LOCAL:
         serverType = 'local'
     else:
@@ -49,7 +50,8 @@ def contact_server():
         print()
 
     r = requests.post('http://%s/api/gpu/runJob' % settings.CATALEARN_URL,
-                      data={'hash': jobHash})
+                      data={'hash': jobHash,
+                            'interrupt': interrupt})
     statusCheck(r)
     res = r.json()
     gpuIp = res['ip']
@@ -93,37 +95,39 @@ def upload_data(gpuIp, jobHash):
             return False
 
 
-def stream_output(gpuIp, wsPort, jobHash):
+def stream_output(gpuIp, wsPort, jobHash, interrupt):
 
     gpuUrl = 'ws://%s:%s' % (gpuIp, wsPort)
     ws = create_connection(gpuUrl)
-    outUrl = None
+    success = False
     ws.send(jobHash)
     try:
         while True:
             msg = ws.recv()
             msgJson = json.loads(msg)
-            if 'end' not in msgJson:
-                print(msgJson['message'], end='')
-            else:
-                if 'downloadUrl' in msgJson:
-                    outUrl = msgJson['downloadUrl']
-                else:
-                    outUrl = None
+            if 'end' in msgJson:
+                success = True
                 break
+            else:
+                print(msgJson['message'], end='')
     except KeyboardInterrupt:
-        print('\nJob interrupted')
+        if interrupt:
+            print('\nJob interrupted')
+        else:
+            print('\nConnection closed, job is still running')
+            print('Use catalearn.reconnect(\'%s\') to reconnect to the job' % jobHash)
+            print('Use catalearn.stop(\'%s\') to stop the running job' % jobHash)
     finally:
         ws.close()
-        return outUrl
+        return success
 
-
-def get_result(outUrl, jobHash):
-
-    print("Downloading result")
+def get_result(gpuIp, jobHash):
+    
+    outUrl = 'http://%s:%s/getResult' % (gpuIp, settings.GPU_PORT)
     r = requests.post(outUrl, data={'hash': jobHash}, stream=True)
     statusCheck(r)
 
+    print("Downloading result")
     totalSize = int(r.headers.get('content-length', 0))
     with open('download.zip', 'wb') as f:
         pbar = tqdm(total=totalSize, unit='B', unit_scale=True)
@@ -133,7 +137,8 @@ def get_result(outUrl, jobHash):
             pbar.update(chunckSize)
         pbar.close()
 
-    z = ZipFile(io.BytesIO(r.content))
+    zipContent = open("download.zip", "rb").read()
+    z = ZipFile(io.BytesIO(zipContent))
     z.extractall()
     newFiles = z.namelist()
 
@@ -152,7 +157,8 @@ def get_result(outUrl, jobHash):
 
     printedNameList = str(newFiles)[1:-1]
     if len(newFiles) > 0:
-        print('New file%s: %s' % ('' if len(newFiles) == 1 else 's', printedNameList))
+        print('New file%s: %s' %
+              ('' if len(newFiles) == 1 else 's', printedNameList))
 
     return result
 
@@ -167,3 +173,26 @@ def get_time_and_credit(jobHash):
     print('%s minute%s used, you have %s minute%s of credit remaining' % (
         jobDuration, '' if jobDuration <= 1 else 's',
         remainingCredits, '' if remainingCredits <= 1 else 's'))
+
+# used for reconnecting to a job
+def get_info_from_hash(jobHash):
+    r = requests.post('http://%s/api/gpu/getInfoFromHash' % settings.CATALEARN_URL,
+                      data={'hash': jobHash})
+    statusCheck(r)
+    res = r.json()
+    status = res['status']
+    ip = res['ip']
+    wsPort = res['wsPort']
+    return (status, ip, wsPort)
+
+# used for stopping a job running after the client disconnects
+def stop_job_with_hash(jobHash):
+    r = requests.post('http://%s/api/gpu/stopJob' % settings.CATALEARN_URL,
+                      data={'hash': jobHash})
+    statusCheck(r)
+    res = r.json()
+    already_stopped = res['already_stopped']
+    if already_stopped:
+        print('The job has already stopped')
+    else:
+        print('The job is now stopped')
