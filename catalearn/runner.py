@@ -4,10 +4,7 @@ import re
 import inspect
 import dill
 from .connector import (contact_server, upload_data, stream_output, 
-    get_result, get_time_and_credit)
-
-
-currentHash = None
+    get_result, get_time_and_credit, get_info_from_hash,  stop_job_with_hash)
 
 def format(sourceLines):  # removes indentation
     head = sourceLines[0]
@@ -16,15 +13,23 @@ def format(sourceLines):  # removes indentation
         head = sourceLines[0]
     return sourceLines
 
-
-def retrieveResultFromLastJob():
-    if currentHash is None:
-        return None
-
-    result = get_result(outUrl, jobHash)
+def reconnect_to_job(jobHash):
+    (status, ip, wsPort) = get_info_from_hash(jobHash)
+    if status == 'running':
+        print('Job reconnected:')
+        success = stream_output(ip, wsPort, jobHash, False)
+        if not success:
+            return None
+    else:
+        print('Job has finished')
+    result = get_result(ip, jobHash)
     get_time_and_credit(jobHash)
     return result
 
+def stop_job(jobHash):
+    (status, ip, wsPort) = get_info_from_hash(jobHash)
+    if status == 'running':
+        stop_job_with_hash(jobHash)
 
 def decorate_gpu_func(func, interrupt):
 
@@ -43,17 +48,15 @@ def decorate_gpu_func(func, interrupt):
         dill.dump(data, open("uploads.pkl", "wb"))
 
         gpuIp, wsPort, jobHash = contact_server(interrupt)
-        # if not in interrupt mode, we store the hash 
-        # so that the user can still retrieve the results later
-        if not interrupt:
-            currentHash = jobHash
+        # if the user cancelled the upload, just return None
         success = upload_data(gpuIp, jobHash)
+        if not success: 
+            return None
+        # prints all the output of the code being run
+        success = stream_output(gpuIp, wsPort, jobHash, interrupt)
         if not success:
             return None
-        outUrl = stream_output(gpuIp, wsPort, jobHash)
-        if not outUrl:
-            return None
-        result = get_result(outUrl, jobHash)
+        result = get_result(gpuIp, jobHash)
         get_time_and_credit(jobHash)
         return result
 
