@@ -16,8 +16,7 @@ from .settings import settings
 def statusCheck(res):
     if res.status_code != 200:
         print('Oops, looks like something went wrong...')
-        print(res.url)
-        print(res.text)
+        print('Please try again later')
         sys.exit()
 
 
@@ -115,8 +114,8 @@ def stream_output(gpuIp, wsPort, jobHash, interrupt):
             print('\nJob interrupted')
         else:
             print('\nConnection closed, job is still running')
-            print('Use catalearn.reconnect(\'%s\') to reconnect to the job' % jobHash)
-            print('Use catalearn.stop(\'%s\') to stop the running job' % jobHash)
+            print('To reconnect: catalearn.reconnect()')
+            print('To stop: catalearn.stop()')
     finally:
         ws.close()
         return success
@@ -191,8 +190,5 @@ def stop_job_with_hash(jobHash):
                       data={'hash': jobHash})
     statusCheck(r)
     res = r.json()
+    # this is another level of redundancy and is not used at the moment
     already_stopped = res['already_stopped']
-    if already_stopped:
-        print('The job has already stopped')
-    else:
-        print('The job is now stopped')

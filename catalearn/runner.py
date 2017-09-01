@@ -30,6 +30,10 @@ def stop_job(jobHash):
     (status, ip, wsPort) = get_info_from_hash(jobHash)
     if status == 'running':
         stop_job_with_hash(jobHash)
+        print('Job is Now stopped')
+    else:
+        print('Job is already stopped')
+
 
 def decorate_gpu_func(func, interrupt):
 
@@ -48,6 +52,7 @@ def decorate_gpu_func(func, interrupt):
         dill.dump(data, open("uploads.pkl", "wb"))
 
         gpuIp, wsPort, jobHash = contact_server(interrupt)
+
         # if the user cancelled the upload, just return None
         success = upload_data(gpuIp, jobHash)
         if not success: 
