@@ -27,19 +27,15 @@ def login_check():
 
 def run_on_gpu(func):
     login_check()
-    return decorate_gpu_func(func, True)
+    return decorate_gpu_func(func)
 
-def run_uninterrupted(func):
+def reconnect():
     login_check()
-    return decorate_gpu_func(func, False)
+    return reconnect_to_job()
 
-def reconnect(jobHash):
+def stop():
     login_check()
-    return reconnect_to_job(jobHash)
-
-def stop(jobHash):
-    login_check()
-    stop_job(jobHash)
+    stop_job()
 
 def save_data(data):
     pass

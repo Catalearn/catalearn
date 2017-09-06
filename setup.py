@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='catalearn',
-    version='1.0.9b1',
+    version='1.0.10b1',
     description='A module for running machine learning code on cloud GPUs',
     url='https://github.com/Catalearn/catalearn',
     author='Edward Liu',

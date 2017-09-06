@@ -1,69 +1,65 @@
 from __future__ import print_function
-import requests
-from websocket import create_connection
 import time
-from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 import json
 import dill
 from tqdm import tqdm
 import sys
 import io
 from zipfile import ZipFile
-from os import path, remove
+from os import path, remove, listdir, rename
+from shutil import rmtree
+import requests
+from websocket import create_connection
+from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
+
 from .settings import settings
+from .custom_exceptions import *
 
 
-def statusCheck(res):
+def status_check(res):
     if res.status_code != 200:
-        print('Oops, looks like something went wrong...')
-        print('Please try again later')
-        sys.exit()
+        raise RequestFailedException(res.text)
 
-
-def contact_server(interrupt):
+def get_available_instance():
     if settings.LOCAL:
-        serverType = 'local'
+        server_type = 'local'
     else:
-        serverType = 'gpu'
-    r = requests.post('http://%s/api/gpu/checkAvailability' % settings.CATALEARN_URL,
+        server_type = 'gpu'
+    r = requests.post('http://%s/api/gpu/getAvailableInstance' % settings.CATALEARN_URL,
                       data={'username': settings.API_KEY,
-                            'type': serverType})
-    statusCheck(r)
+                            'type': server_type})
+    status_check(r)
     res = r.json()
-
-    jobHash = res['jobHash']
+    job_hash = res['jobHash']
     idle = res['idle']
-    instanceId = res['instanceId']
+    instance_id = res['instanceId']
+    return (job_hash, idle, instance_id)
 
-    if not idle:
-        print("Starting server, this will take about 20 seconds")
-        while True:
-            r = requests.post('http://%s/api/gpu/checkStatus' % settings.CATALEARN_URL,
-                              data={'instanceId': instanceId})
-            statusCheck(r)
-            res = r.json()
-            if res['started']:
-                break
-            time.sleep(3)
-            print('.', end='')
-        print()
+def ping_until_gpu_start(instance_id):
+    while True:
+        r = requests.post('http://%s/api/gpu/checkStatus' % settings.CATALEARN_URL,
+                            data={'instanceId': instance_id})
+        status_check(r)
+        res = r.json()
+        if res['started']:
+            break
+        time.sleep(3)
+        print('.', end='')
+        sys.stdout.flush()
+    print()
 
-    r = requests.post('http://%s/api/gpu/runJob' % settings.CATALEARN_URL,
-                      data={'hash': jobHash,
-                            'interrupt': interrupt})
-    statusCheck(r)
+def get_ip_and_ws_port(job_hash):
+    r = requests.post('http://%s/api/gpu/getIpPort' % settings.CATALEARN_URL,
+                      data={'hash': job_hash})
+    status_check(r)
     res = r.json()
-    gpuIp = res['ip']
-    wsPort = res['ws_port']
-    return (gpuIp, wsPort, jobHash)
+    return (res['ip'], res['ws_port'])
 
 
-def upload_data(gpuIp, jobHash):
-    url = 'http://%s:%s/runJobDecorator' % (gpuIp, settings.GPU_PORT)
-    print("Uploading data")
-
-    fileSize = path.getsize('uploads.pkl')
-    pbar = tqdm(total=fileSize, unit='B', unit_scale=True)
+def upload_data(gpu_ip, job_hash, data_path):
+    url = 'http://%s:%s/runJobDecorator' % (gpu_ip, settings.GPU_PORT)
+    file_size = path.getsize(data_path)
+    pbar = tqdm(total=file_size, unit='B', unit_scale=True)
 
     def callback(monitor):
         progress = monitor.bytes_read - callback.last_bytes_read
@@ -71,124 +67,131 @@ def upload_data(gpuIp, jobHash):
         callback.last_bytes_read = monitor.bytes_read
     callback.last_bytes_read = 0
 
-    with open('uploads.pkl', 'rb') as file:
+    with open(data_path, 'rb') as f:
         data = {
-            'file': ('uploads.pkl', file, 'application/octet-stream'),
-            'hash': jobHash
+            'file': ('uploads.pkl', f, 'application/octet-stream'),
+            'hash': job_hash
         }
         encoder = MultipartEncoder(
             fields=data
         )
         monitor = MultipartEncoderMonitor(encoder, callback)
-        try:
-            r = requests.post(url, data=monitor, headers={
-                'Content-Type': monitor.content_type})
-            pbar.close()
-            statusCheck(r)
-            remove('uploads.pkl')
-            return True
-        except:
-            pbar.close()  # need to close before printing anything
-            print('Upload cancelled')
-            remove('uploads.pkl')
-            return False
+        r = requests.post(url, data=monitor, headers={
+            'Content-Type': monitor.content_type})
+
+    remove(data_path)
+    # pbar might not close when the user interrupts, need to fix this
+    pbar.close()
+    status_check(r)
 
 
-def stream_output(gpuIp, wsPort, jobHash, interrupt):
 
-    gpuUrl = 'ws://%s:%s' % (gpuIp, wsPort)
-    ws = create_connection(gpuUrl)
-    success = False
-    ws.send(jobHash)
+def stream_output(gpu_ip, ws_port, job_hash):
+    # connect to the websocket for this job
+    url = 'ws://%s:%s' % (gpu_ip, ws_port)
+    ws = create_connection(url)
+    # send over the job hash to start the job
+    ws.send(job_hash)
+    # print all the outputs of the script to the screen
     try:
         while True:
             msg = ws.recv()
             msgJson = json.loads(msg)
             if 'end' in msgJson:
-                success = True
                 break
             else:
                 print(msgJson['message'], end='')
-    except KeyboardInterrupt:
-        if interrupt:
-            print('\nJob interrupted')
-        else:
-            print('\nConnection closed, job is still running')
-            print('To reconnect: catalearn.reconnect()')
-            print('To stop: catalearn.stop()')
-    finally:
         ws.close()
-        return success
 
-def get_result(gpuIp, jobHash):
-    
-    outUrl = 'http://%s:%s/getResult' % (gpuIp, settings.GPU_PORT)
-    r = requests.post(outUrl, data={'hash': jobHash}, stream=True)
-    statusCheck(r)
+    # if the user interrupts the job, decide whether or not to stop
+    except KeyboardInterrupt:
+        # propagate the exception for the layer above to handle
+        raise JobInterruptedException()
 
-    print("Downloading result")
-    totalSize = int(r.headers.get('content-length', 0))
+
+def download_and_unzip_result(url, job_hash):
+    r = requests.post(url, data={'hash': job_hash}, stream=True)
+    status_check(r)
+    total_size = int(r.headers.get('content-length', 0))
     with open('download.zip', 'wb') as f:
-        pbar = tqdm(total=totalSize, unit='B', unit_scale=True)
-        chunckSize = 32768
-        for data in r.iter_content(chunk_size=chunckSize):
+        pbar = tqdm(total=total_size, unit='B', unit_scale=True)
+        chunck_size = 1024 * 32  # 32kb
+        for data in r.iter_content(chunk_size=chunck_size):
             f.write(data)
-            pbar.update(chunckSize)
+            pbar.update(chunck_size)
+        # again there might be a pbar issue here
         pbar.close()
 
-    zipContent = open("download.zip", "rb").read()
-    z = ZipFile(io.BytesIO(zipContent))
+    zip_content = open("download.zip", "rb").read()
+    z = ZipFile(io.BytesIO(zip_content))
     z.extractall()
-    newFiles = z.namelist()
-
-    result = None
-    if path.isfile(jobHash):
-        with open(jobHash, "rb") as f:
-
-            # import_all()  # Hack: a workaround for dill's pickling problem
-            result = dill.load(f)
-            # unimport_all()
-            print("Done!")
-            remove(jobHash)
-            newFiles.remove(jobHash)
-
     remove('download.zip')
 
-    printedNameList = str(newFiles)[1:-1]
-    if len(newFiles) > 0:
-        print('New file%s: %s' %
-              ('' if len(newFiles) == 1 else 's', printedNameList))
+    result = None # output of the script
+    new_files = None # names of new files created by the script
 
-    return result
+    pickle_path = path.abspath(path.join(job_hash, job_hash + '.pkl'))
+    if path.isfile(pickle_path):
+        with open(pickle_path, 'rb') as f:
+            # Hack: a workaround for dill's pickling problem
+            # import_all()  
+            result = dill.load(f)
+            # unimport_all()
+        remove(pickle_path)
+
+    if path.isdir(job_hash):
+        new_files = listdir(job_hash)
+        for name in new_files:
+            rename(path.join(job_hash, name), name)
+        rmtree(job_hash)
+
+    return result, new_files
+
+
+def get_uploaded_result(job_hash):
+    url = 'http://%s/api/gpu/getUploadedResult' % settings.CATALEARN_URL
+    return download_and_unzip_result(url, job_hash)
+
+
+def get_result(gpu_ip, job_hash):
+    url = 'http://%s:%s/getResult' % (gpu_ip, settings.GPU_PORT)
+    return download_and_unzip_result(url, job_hash)
 
 
 def get_time_and_credit(jobHash):
     r = requests.post('http://%s/api/gpu/getTimeAndCredit' % settings.CATALEARN_URL,
                       data={'hash': jobHash})
-    statusCheck(r)
+    status_check(r)
     res = r.json()
-    jobDuration = res['time']
-    remainingCredits = res['credits']
-    print('%s minute%s used, you have %s minute%s of credit remaining' % (
-        jobDuration, '' if jobDuration <= 1 else 's',
-        remainingCredits, '' if remainingCredits <= 1 else 's'))
+    return (res['time'], res['credits'])
 
-# used for reconnecting to a job
-def get_info_from_hash(jobHash):
-    r = requests.post('http://%s/api/gpu/getInfoFromHash' % settings.CATALEARN_URL,
-                      data={'hash': jobHash})
-    statusCheck(r)
-    res = r.json()
-    status = res['status']
-    ip = res['ip']
-    wsPort = res['wsPort']
-    return (status, ip, wsPort)
+# abort a job, could happen at any stage
+def abort_job(job_hash):
+    url = 'http://%s/api/gpu/abortJob' % settings.CATALEARN_URL
+    r = requests.post(url, data={'hash': job_hash})
+    status_check(r)
 
-# used for stopping a job running after the client disconnects
-def stop_job_with_hash(jobHash):
-    r = requests.post('http://%s/api/gpu/stopJob' % settings.CATALEARN_URL,
-                      data={'hash': jobHash})
-    statusCheck(r)
+# returns info about all jobs that are either 'running' or 'results_uploaded'
+def get_unreturned_jobs():
+    r = requests.post('http://%s/api/gpu/getUnreturnedJobs' % settings.CATALEARN_URL,
+                      data={'key': settings.API_KEY})
+    status_check(r)
     res = r.json()
-    # this is another level of redundancy and is not used at the moment
-    already_stopped = res['already_stopped']
+    # convert the dictionary to tuples
+    unreturned_jobs = [(
+        x['hash'],
+        x['status'],
+        x['ip'],
+        x['wsPort']
+    ) for x in res]
+
+    return unreturned_jobs
+
+# returns info about all 'running' jobs
+def get_running_jobs():
+    unreturned_jobs = get_unreturned_jobs()
+    # x[1] corresponds to the status
+    return [x for x in unreturned_jobs if x[1] == 'running']
+
+
+
