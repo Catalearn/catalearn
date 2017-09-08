@@ -7,6 +7,7 @@ from os import path
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 import sys
 
+
 def save_var_to_cloud(data_var, data_name):
 
     if (not isinstance(data_name, str)):
@@ -14,40 +15,27 @@ def save_var_to_cloud(data_var, data_name):
         return
 
     user_hash = settings.API_KEY
-
     data_buffer = io.BytesIO(dill.dumps(data_var))
-    print('Uploading \'%s\'' data_name)
+    print('Uploading \'%s\'...' % data_name)
 
-    url = 'http://%s/api/save_on_aws/save_on_aws' % settings.CATALEARN_URL
-
-    data = {
+    url = 'http://%s/api/save/getUploadUrl' % settings.CATALEARN_URL
+    r = requests.post(url, data={
         'user_hash': user_hash,
-        'file_name': data_name,
-        'file': ( 'data', data_buffer, 'application/octet-stream'),
-    }
-    encoder = MultipartEncoder(
-        fields=data
-    )
-    total = data_buffer.getbuffer().nbytes
-    sys.stdout.flush()
-    pbar = tqdm(total=total, unit='B', unit_scale=True)
-    def callback(monitor):
-        progress = monitor.bytes_read - callback.last_bytes_read
-        pbar.update(progress)
-        callback.last_bytes_read = monitor.bytes_read
-    callback.last_bytes_read = 0
+        'file_name': data_name
+    })
+    if r.status_code != 200:
+        raise RuntimeError(r.text)
 
-    monitor = MultipartEncoderMonitor(encoder, callback) 
+    presigned_url = r.content
 
-    server_resp = requests.post(url, data=monitor, headers={'Content-Type': monitor.content_type})
-    pbar.close()
+    r = requests.put(presigned_url, data=data_buffer)
 
-    if (server_resp.status_code != 200):
-        print("Error saving \'%s\' to the cloud" % data_name)
+    if (r.status_code != 200):
+        print("Error saving \'%s\' to the cloud: %s" % (data_name, r.content))
     else:
         print("Successfully uploaded \'%s\' to the cloud" % data_name)
     return
-    
+
 
 def download_from_cloud(data_name):
     if (not isinstance(data_name, str)):
@@ -56,24 +44,24 @@ def download_from_cloud(data_name):
 
     user_hash = settings.API_KEY
 
+    url = 'http://%s/api/save/getDownloadUrl' % settings.CATALEARN_URL
+    r = requests.post(url, data={
+        'user_hash': user_hash,
+        'file_name': data_name
+    })
+    if r.status_code != 200:
+        raise RuntimeError(r.text)
+
+    presigned_url = r.content
+
     # Now send the post request to the catalearn server
-    server_resp = requests.post('http://%s/api/save_on_aws/download' % settings.CATALEARN_URL,
-                                data={
-                                    "user_hash": user_hash,
-                                    "file_name": data_name
-                                }, stream=True)
+    r = requests.get(presigned_url, stream=True)
 
-    if server_resp.status_code != 200:
-        if server_resp.status_code == 404:
-            return print('\'%s\' is not found' % data_name)
-        else:
-            return print('Invalid request')
-
-    total_size = int(server_resp.headers.get('content-length', 0))
+    total_size = int(r.headers.get('content-length', 0))
     raw = io.BytesIO()
 
     print('Downloading %s' % data_name)
-    for data in tqdm(server_resp.iter_content(32 * 1024), total=total_size, unit='B', unit_scale=True):
+    for data in tqdm(r.iter_content(32 * 1024), total=total_size, unit='B', unit_scale=True):
         raw.write(data)
 
     print("Successfully downloaded \'%s\' from the cloud" % data_name)
