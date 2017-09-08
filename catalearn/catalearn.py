@@ -4,7 +4,7 @@ import dill
 import inspect
 
 from .runner import decorate_gpu_func, reconnect_to_job, stop_job
-from .saver import *
+from .saver import save_var_to_cloud, download_from_cloud
 from .admin import verify_key
 from .settings import settings
 
@@ -37,5 +37,10 @@ def stop():
     login_check()
     stop_job()
 
-def save_data(data):
-    pass
+def save(data, name):
+    login_check()
+    save_var_to_cloud(data, name)
+
+def load(name):
+    login_check()
+    return download_from_cloud(name)

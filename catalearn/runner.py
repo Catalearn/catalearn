@@ -25,7 +25,7 @@ def get_source_code(func):
 
 def print_new_files(new_files):
     if new_files:
-        print('New file%s: %s' % ('' if len(new_files) == 1 else 's', str(new_files)[1:-1]))
+        print('New file%s downloaded: %s' % ('' if len(new_files) == 1 else 's', str(new_files)[1:-1]))
 
 def print_time_credit(job_hash):
     duration, credit = get_time_and_credit(job_hash)
