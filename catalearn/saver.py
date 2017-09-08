@@ -61,7 +61,7 @@ def download_from_cloud(data_name):
     raw = io.BytesIO()
 
     print('Downloading %s' % data_name)
-    for data in tqdm(r.iter_content(32 * 1024), total=total_size, unit='B', unit_scale=True):
+    for data in r.iter_content(32 * 1024):
         raw.write(data)
 
     print("Successfully downloaded \'%s\' from the cloud" % data_name)
