@@ -16,6 +16,8 @@ def save_var_to_cloud(data_var, data_name):
     user_hash = settings.API_KEY
 
     data_buffer = io.BytesIO(dill.dumps(data_var))
+    print('Uploading \'%s\'' data_name)
+
     url = 'http://%s/api/save_on_aws/save_on_aws' % settings.CATALEARN_URL
 
     data = {
@@ -69,6 +71,8 @@ def download_from_cloud(data_name):
 
     total_size = int(server_resp.headers.get('content-length', 0))
     raw = io.BytesIO()
+
+    print('Downloading %s' % data_name)
     for data in tqdm(server_resp.iter_content(32 * 1024), total=total_size, unit='B', unit_scale=True):
         raw.write(data)
 
