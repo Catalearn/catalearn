@@ -53,7 +53,6 @@ def add_error_handling(run_job_func):
         # all keyboard interrupt during streaming will be caught and raised as JobInterruptedException
         # anything here will be during upload or download, so we just abort
         except KeyboardInterrupt as e:
-            print('Job aborted')
             abort_and_print_credit()
 
         except RequestFailedException as e:
@@ -63,74 +62,76 @@ def add_error_handling(run_job_func):
             sys.tracebacklimit = 0
             sys.exit()
 
-        except JobInterruptedException as e:
-            # extra newline incase no newline was printed
-            print('\nJob interrupted')
-            ans = input('Do you want to abort the job?\n')
-            if ans == 'yes':
-                abort_and_print_credit()
-            else:
-                print('Job is still running\n')
-                print('To reconnect to the job:\n')
-                print('    catalearn.reconnect()\n')
-                print('To stop the job:\n')
-                print('    catalearn.stop()\n')
+        # except JobInterruptedException as e:
+        #     # extra newline incase no newline was printed
+        #     # print('\nJob interrupted')
+        #     # ans = input('Do you want to abort the job?\n')
+        #     # if ans == 'yes':
+        #     #     abort_and_print_credit()
+        #     # else:
+        #     #     print('Job is still running\n')
+        #     #     print('To reconnect to the job:\n')
+        #     #     print('    catalearn.reconnect()\n')
+        #     #     print('To stop the job:\n')
+        #     #     print('    catalearn.stop()\n')
+        #     print('Job aborted')
+        #     abort_and_print_credit()
 
     return wrap
 
 
-@add_error_handling
-def reconnect_to_job():
-    # ask for a list of unfinished jobs
-    # this includes jobs that have finished but haven't returned the result
-    unreturned_jobs = get_unreturned_jobs()
-    if not unreturned_jobs:
-        print('No running jobs')
-        return
+# @add_error_handling
+# def reconnect_to_job():
+#     # ask for a list of unfinished jobs
+#     # this includes jobs that have finished but haven't returned the result
+#     unreturned_jobs = get_unreturned_jobs()
+#     if not unreturned_jobs:
+#         print('No running jobs')
+#         return
 
-    # we are only looking at one job right now, may extend this in the future
-    job_hash, status, gpu_ip, ws_port = unreturned_jobs[0]
-    # we set the global job_hash so that we know which job to abort if things go wrong
-    settings.CURRENT_JOB_HASH = job_hash
-    if status == 'running':
-        print('Job reconnected:')
-        # reconnect the websocket
-        stream_output(gpu_ip, ws_port, job_hash)
-        print('Job finished') 
-        print('Downloading result')
-        result, new_files = get_result(gpu_ip, job_hash)
+#     # we are only looking at one job right now, may extend this in the future
+#     job_hash, status, gpu_ip, ws_port = unreturned_jobs[0]
+#     # we set the global job_hash so that we know which job to abort if things go wrong
+#     settings.CURRENT_JOB_HASH = job_hash
+#     if status == 'running':
+#         print('Job reconnected:')
+#         # reconnect the websocket
+#         stream_output(gpu_ip, ws_port, job_hash)
+#         print('Job finished') 
+#         print('Downloading result')
+#         result, new_files = get_result(job_hash)
 
-    elif status == 'uploaded':
-        # the GPU server has been shut down
-        # make a call to catalearn to retrieve the result
-        print('Job finished') 
-        print('Downloading result')
-        result, new_files = get_uploaded_result(job_hash)
+#     elif status == 'uploaded':
+#         # the GPU server has been shut down
+#         # make a call to catalearn to retrieve the result
+#         print('Job finished') 
+#         print('Downloading result')
+#         result, new_files = get_uploaded_result(job_hash)
 
-    elif status == 'finished':
-        # results still on the GPU
-        print('Job finished') 
-        print('Downloading result')
-        result, new_files = get_result(gpu_ip, job_hash)
+#     elif status == 'finished':
+#         # results still on the GPU
+#         print('Job finished') 
+#         print('Downloading result')
+#         result, new_files = get_result(gpu_ip, job_hash)
     
-    else:
-        raise ValueError('invalid status: ' + status)
+#     else:
+#         raise ValueError('invalid status: ' + status)
 
-    print_new_files(new_files)
-    print_time_credit(job_hash)
-    return result
+#     print_new_files(new_files)
+#     print_time_credit(job_hash)
+#     return result
 
 
-@add_error_handling
-def stop_job():
-    running_jobs = get_running_jobs()
-    if running_jobs:
-        # only dealing with one job for now
-        job_hash, _, _, _ = running_jobs[0]
-        abort_job(job_hash)
-        print('Job is Now stopped')
-    else:
-        print('No jobs running right now')
+# @add_error_handling
+# def stop_job():
+#     running_jobs = get_running_jobs()
+#     if running_jobs:
+#         # only dealing with one job for now
+#         job_hash, _, _, _ = running_jobs[0]
+#         abort_job(job_hash)
+#         print('Job is Now stopped')
+#     else:
+#         print('No jobs running right now')
 
 
 def decorate_gpu_func(func):
@@ -145,14 +146,14 @@ def decorate_gpu_func(func):
         data_path = "uploads.pkl"
         dill.dump(data, open(data_path, "wb"))
 
-        job_hash, has_idle_instance, instance_id = get_available_instance()
+        job_hash, has_idle_instance = get_available_instance()
         # we set the global job_hash so that we know which job to abort if things go wrong
         settings.CURRENT_JOB_HASH = job_hash
         # no idle GPU available, catalearn is starting one, 
         # we need to ping it to see if it has started
         if not has_idle_instance:
             print("Starting server, this will take about 20 seconds")
-            ping_until_gpu_start(instance_id)
+            ping_until_gpu_start(job_hash)
             print("Server started")
 
         gpu_ip, ws_port = get_ip_and_ws_port(job_hash)
@@ -162,7 +163,7 @@ def decorate_gpu_func(func):
         stream_output(gpu_ip, ws_port, job_hash)
         print('Job finished') 
         print('Downloading result')
-        result, new_files = get_result(gpu_ip, job_hash)
+        result, new_files = get_result(job_hash)
         print("Done!")
         print_new_files(new_files)
         print_time_credit(job_hash)

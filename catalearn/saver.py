@@ -31,7 +31,7 @@ def save_var_to_cloud(data_var, data_name):
     r = requests.put(presigned_url, data=data_buffer)
 
     if (r.status_code != 200):
-        print("Error saving %s to the cloud: %s" % (data_name, r.content))
+        print("Error saving %s\ to the cloud: %s" % (data_name, r.content))
     else:
         print("Successfully uploaded %s to the cloud" % data_name)
     return

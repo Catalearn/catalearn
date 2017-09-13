@@ -3,7 +3,7 @@ import sys
 import dill
 import inspect
 
-from .runner import decorate_gpu_func, reconnect_to_job, stop_job
+from .runner import decorate_gpu_func
 from .saver import save_var_to_cloud, download_from_cloud
 from .admin import verify_key
 from .settings import settings
@@ -29,13 +29,13 @@ def run_on_gpu(func):
     login_check()
     return decorate_gpu_func(func)
 
-def reconnect():
-    login_check()
-    return reconnect_to_job()
+# def reconnect():
+#     login_check()
+#     return reconnect_to_job()
 
-def stop():
-    login_check()
-    stop_job()
+# def stop():
+#     login_check()
+#     stop_job()
 
 def save(data, name):
     login_check()
