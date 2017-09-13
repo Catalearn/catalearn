@@ -153,7 +153,7 @@ def get_result(job_hash):
     r = requests.post('http://%s/api/gpu/getDownloadUrl' %
                   settings.CATALEARN_URL, data={'hash': job_hash})
     status_check(r)
-    url = r
+    url = r.content
     return download_and_unzip_result(url, job_hash)
 
 

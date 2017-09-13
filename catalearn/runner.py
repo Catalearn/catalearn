@@ -39,7 +39,6 @@ def print_time_credit(job_hash):
 def abort_and_print_credit():
     if settings.CURRENT_JOB_HASH:
         abort_job(settings.CURRENT_JOB_HASH)
-        print('Job aborted')
         print_time_credit(settings.CURRENT_JOB_HASH)
     sys.tracebacklimit = 0
     sys.exit()
@@ -53,6 +52,7 @@ def add_error_handling(run_job_func):
         # all keyboard interrupt during streaming will be caught and raised as JobInterruptedException
         # anything here will be during upload or download, so we just abort
         except KeyboardInterrupt as e:
+            print('\nJob aborted')
             abort_and_print_credit()
 
         except RequestFailedException as e:
