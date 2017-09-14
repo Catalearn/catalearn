@@ -24,12 +24,10 @@ or
 ## Usage
 
 ### Register for an access key
-An access key is required for using the module, it can be registered at www.catalearn.com
+An access key is required for using the catalearn module, you can register for one at www.catalearn.com
 
 ### Import and login
-Before using the module, you need to login with our access key. 
-
-Replace __ACCESS_KEY__ below with the access key you just generated.
+Before using the module, you need to login with you access key. Replace __ACCESS_KEY__ below with the access key you just generated.
 ```
 import catalearn
 catalearn.login(ACCESS_KEY)
@@ -60,7 +58,8 @@ def save():
 save()
 ```
 
-### Saving data to the cloud and loading it back
+### Saving and loading data
+Saving data to the cloud and loading it from the cloud can prevent multiple data uploads.
 ```
 import numpy as np
 
