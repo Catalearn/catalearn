@@ -6,7 +6,7 @@ __Catalearn__ is a python module that allows you to run code on a cloud gpu. It 
 
 ## Installation
 
-__Note:__ Catalearn only works on python3
+__Note:__ Catalearn only works on python 3
 
 `pip3 install catalearn`
 
@@ -23,31 +23,35 @@ or
 
 ## Usage
 
-### Run and return result
- - First sign up for a key on www.catalearn.com/dashboard/
- - Then replace <YOUR_API_KEY> with the key you generated.
+### Register for an access key
+An access key is required for using the module, it can be registered at www.catalearn.com
+
+### Import and login
+Before using the module, you need to login with our access key. 
+
+Replace __ACCESS_KEY__ below with the access key you just generated.
 ```
 import catalearn
-catalearn.login(<YOUR_API_KEY>)
+catalearn.login(ACCESS_KEY)
+```
 
+### Run code the the GPU
+Use the `catalearn.run_on_gpu` decorator to run functions on the GPU
+```
 @catalearn.run_on_gpu
 def gpu_function(data):
-    print('Doing some serious computation')
-    return 'here is the result'
+    return data + 1
 
-result = gpu_function('a lot of data')
-print(result)
-# prints "here is the result"
+result = gpu_function(1)
+print(result) 
+# 2
 ```
 
-### Run and save to file
-Anything you save in the current directory will be downloaded to your local machine.
- - Replace <YOUR_API_KEY> with the GPU Access Key you generated from [Catalearn](http://www.catalearn.com/dashboard/ "Title")
- - Run the following code and the file __"something.txt"__ will appear.
-```
-import catalearn
-catalearn.login(<YOUR_API_KEY>)
+### Writing to files
+Anything you save in the current directory will be downloaded to your local current directory. This is useful for saving models.
 
+The following code will create the file 'something.txt'
+```
 @catalearn.run_on_gpu
 def save():
     with open('something.txt', 'w') as file:
@@ -56,17 +60,31 @@ def save():
 save()
 ```
 
+### Saving data to the cloud and loading it back
+```
+import numpy as np
+
+data = np.array([1,2,3,4,5])
+catalearn.save(data, 'my_data')
+
+delete data
+
+data = catalearn.load('my_data')
+print(data) 
+# [1 2 3 4 5]
+```
+
 ## Example: Train a Convolutional Neural Network on the GPU 
- - First run `sudo pip3 install keras tensorflow pandas` to install the modules needed.
- - Replace <YOUR_API_KEY> with the GPU Access key you generated from [Catalearn](http://www.catalearn.com/dashboard/ "Title")
- - After running the code, you will find __"model.h5"__ in your current directory, this is the trained CNN model!
+This example uses catalearn to train a CNN on the MNIST dataset.
+
+Don't forget to replace __ACCESS_KEY__ with your own key
 ```
 from keras.datasets import mnist
 import pandas as pd
 
 import catalearn
 # login to catalearn
-catalearn.login(<YOUR_API_KEY>)
+catalearn.login(ACCESS_KEY) # replace with your own access key
 
 # load the MNIST dataset
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -77,13 +95,28 @@ x_test_reshape = x_test.reshape(x_test.shape[0], 28, 28, 1)
 y_train_onehot = pd.get_dummies(y_train).as_matrix()
 y_test_onehot = pd.get_dummies(y_test).as_matrix()
 
-# this decorator runs the function in a cloud GPU
+# upload the datasets to catalearn
+# this way we don't have to upload the data again every time we train a model
+catalearn.save(x_train_reshape, 'x_train')
+catalearn.save(x_test_reshape, 'x_test')
+catalearn.save(y_train_onehot, 'y_train')
+catalearn.save(y_test_onehot, 'y_test')
+
+# defined the function to be run
 @catalearn.run_on_gpu
-def train(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot):
+def train(epochs):
 
     # need to import the libraries in the function to use the GPU accelerated versions
     from keras.models import Sequential
     from keras.layers import Dense, Activation, Conv2D, Flatten, MaxPooling2D
+
+    import catalearn
+    catalearn.login(ACCESS_KEY)
+
+    x_train = catalearn.load('x_train')
+    x_test = catalearn.load('x_test')
+    y_train = catalearn.load('y_train')
+    y_test = catalearn.load('y_test')
 
     model = Sequential()
     model.add(Conv2D(32, (3, 3), input_shape=(28, 28, 1)))
@@ -95,7 +128,7 @@ def train(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot):
     model.add(Activation('softmax'))
 
     model.compile(loss='categorical_crossentropy', optimizer='Adadelta', metrics=['accuracy'])
-    model.fit(x_train_reshape, y_train_onehot, epochs=10, batch_size=32)
+    model.fit(x_train_reshape, y_train_onehot, epochs=epochs, batch_size=32)
 
     # the model will be downloaded to your local machine
     model.save('model.h5')
@@ -104,7 +137,7 @@ def train(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot):
 
     return loss_and_metrics
 
-loss_and_metrics = train(x_train_reshape, x_test_reshape, y_train_onehot, y_test_onehot)
+loss_and_metrics = train(5)
 print("Trained model has cost %s and test accuracy %s" % tuple(loss_and_metrics))
 ```
 
