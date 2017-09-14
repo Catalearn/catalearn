@@ -33,7 +33,7 @@ import catalearn
 catalearn.login(ACCESS_KEY)
 ```
 
-### Run code the the GPU
+### Run code the GPU
 Use the `catalearn.run_on_gpu` decorator to run functions on the GPU
 ```
 @catalearn.run_on_gpu
@@ -59,7 +59,7 @@ save()
 ```
 
 ### Saving and loading data
-Saving data to the cloud and loading it from the cloud can prevent multiple data uploads.
+Use `catalearn.save` and `catalearn.load` to store the data to the cloud and access it from there. This prevents multiple data uploads when training models.
 ```
 import numpy as np
 
