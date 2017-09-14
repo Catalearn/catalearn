@@ -27,20 +27,22 @@ or
 An access key is required for using the catalearn module, you can register for one at www.catalearn.com
 
 ### Import and login
-Before using the module, you need to login with you access key. Replace __ACCESS_KEY__ below with the access key you just generated.
+Before using the module, you need to login with your access key. Replace __ACCESS_KEY__ below with the access key you just generated.
 ```
 import catalearn
 catalearn.login(ACCESS_KEY)
 ```
 
-### Run code the GPU
-Use the `catalearn.run_on_gpu` decorator to run functions on the GPU
+### Run code on the GPU
+Use the `catalearn.run_on_gpu` decorator to run functions on the GPU. Everything the function prints will be streamed back.
 ```
 @catalearn.run_on_gpu
 def gpu_function(data):
+    print('calculating...')
     return data + 1
 
 result = gpu_function(1)
+# calculating...
 print(result) 
 # 2
 ```
@@ -48,7 +50,7 @@ print(result)
 ### Writing to files
 Anything you save in the current directory will be downloaded to your local current directory. This is useful for saving models.
 
-The following code will create the file 'something.txt'
+The following code will create the file 'something.txt'.
 ```
 @catalearn.run_on_gpu
 def save():
