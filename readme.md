@@ -59,7 +59,7 @@ save()
 ```
 
 ### Saving and loading data
-Use `catalearn.save` and `catalearn.load` to store the data to the cloud and access it from there. This prevents multiple data uploads when training models.
+Use `catalearn.save` and `catalearn.load` to store the data in the cloud and download it from there. This prevents multiple data uploads when training models.
 ```
 import numpy as np
 
@@ -76,14 +76,14 @@ print(data)
 ## Example: Train a Convolutional Neural Network on the GPU 
 This example uses catalearn to train a CNN on the MNIST dataset.
 
-Don't forget to replace __ACCESS_KEY__ with your own key
+Don't forget to replace __ACCESS_KEY__ with your own access key.
 ```
 from keras.datasets import mnist
 import pandas as pd
 
 import catalearn
 # login to catalearn
-catalearn.login(ACCESS_KEY) # replace with your own access key
+catalearn.login(ACCESS_KEY) # replace with your own access key.
 
 # load the MNIST dataset
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -95,7 +95,7 @@ y_train_onehot = pd.get_dummies(y_train).as_matrix()
 y_test_onehot = pd.get_dummies(y_test).as_matrix()
 
 # upload the datasets to catalearn
-# this way we don't have to upload the data again every time we train a model
+# this way we don't have to upload the data every time we want to train a model
 catalearn.save(x_train_reshape, 'x_train')
 catalearn.save(x_test_reshape, 'x_test')
 catalearn.save(y_train_onehot, 'y_train')
