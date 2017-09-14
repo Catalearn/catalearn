@@ -6,3 +6,4 @@ build/
 catalearn.egg-info/
 dist/
 *.swp
+*.ipynb
