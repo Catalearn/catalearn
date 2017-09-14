@@ -16,7 +16,7 @@ def save_var_to_cloud(data_var, data_name):
 
     user_hash = settings.API_KEY
     data_buffer = io.BytesIO(dill.dumps(data_var))
-    print('Uploading \'%s\'...' % data_name)
+    print('Uploading %s...' % data_name)
 
     url = 'http://%s/api/save/getUploadUrl' % settings.CATALEARN_URL
     r = requests.post(url, data={
