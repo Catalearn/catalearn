@@ -111,9 +111,6 @@ def train(epochs):
     from keras.models import Sequential
     from keras.layers import Dense, Activation, Conv2D, Flatten, MaxPooling2D
 
-    import catalearn
-    catalearn.login(ACCESS_KEY)
-
     x_train = catalearn.load('x_train')
     x_test = catalearn.load('x_test')
     y_train = catalearn.load('y_train')

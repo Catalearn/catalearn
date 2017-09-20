@@ -30,7 +30,7 @@ def print_new_files(new_files):
 def print_time_credit(job_hash):
     duration, credit = get_time_and_credit(job_hash)
     if duration == 0:
-        print('Your job took less than a minute, so its free!')
+        print('Your job took less than a minute, so it\'s free!')
     else:
         print('%s minute%s used, you have %s minute%s of credit remaining' % (
             duration, '' if duration <= 1 else 's',
@@ -52,9 +52,10 @@ def add_error_handling(run_job_func):
         # all keyboard interrupt during streaming will be caught and raised as JobInterruptedException
         # anything here will be during upload or download, so we just abort
         except KeyboardInterrupt as e:
-            # print('\nJob aborted')
-            # abort_and_print_credit()
-            print('\nStreaming stopped, code is still running in the cloud')
+            print('\nJob aborted')
+            abort_and_print_credit()
+            # print('\nStreaming stopped, code is still running in the cloud')
+            # print('Your job hash is: %s' % settings.CURRENT_JOB_HASH)
 
         except RequestFailedException as e:
             print('Oops, something went wrong...')
@@ -156,6 +157,8 @@ def decorate_gpu_func(func):
             print("Starting server, this will take about 20 seconds")
             ping_until_gpu_start(job_hash)
             print("Server started")
+
+        print(job_hash)
 
         gpu_ip, ws_port = get_ip_and_ws_port(job_hash)
         print("Uploading data")
