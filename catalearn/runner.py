@@ -52,8 +52,9 @@ def add_error_handling(run_job_func):
         # all keyboard interrupt during streaming will be caught and raised as JobInterruptedException
         # anything here will be during upload or download, so we just abort
         except KeyboardInterrupt as e:
-            print('\nJob aborted')
-            abort_and_print_credit()
+            # print('\nJob aborted')
+            # abort_and_print_credit()
+            print('\nStreaming stopped, code is still running in the cloud')
 
         except RequestFailedException as e:
             print('Oops, something went wrong...')
