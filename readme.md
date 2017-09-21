@@ -76,34 +76,52 @@ print(data)
 ```
 
 ## Example: Train a Convolutional Neural Network on the GPU 
-This example uses catalearn to train a CNN on the MNIST dataset.
+This example uses catalearn to train a CNN on the MNIST dataset. 
 
-Don't forget to replace __ACCESS_KEY__ with your own access key.
+We recommend running the example in a __Jupyter Notebook__ cell by cell to get the best result, but you can also put them together into a script.
+
+__Dependencies:__ keras, pandas
+
+### Load the dependencies
 ```
 from keras.datasets import mnist
 import pandas as pd
-
 import catalearn
-# login to catalearn
-catalearn.login(ACCESS_KEY) # replace with your own access key.
+```
 
-# load the MNIST dataset
+### Login to catalearn
+```
+catalearn.login(ACCESS_KEY) # replace with your own access key.
+```
+
+### Load and process the MNIST dataset
+Here we use keras to load the MNIST dataset. We reshape the 28x28 images to 28x28x1, making them compatible with keras. We also apply onehot encoding to the labels.
+```
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-# process the data
 x_train_reshape = x_train.reshape(x_train.shape[0], 28, 28, 1)
 x_test_reshape = x_test.reshape(x_test.shape[0], 28, 28, 1)
+
 y_train_onehot = pd.get_dummies(y_train).as_matrix()
 y_test_onehot = pd.get_dummies(y_test).as_matrix()
+```
 
-# upload the datasets to catalearn
-# this way we don't have to upload the data every time we want to train a model
+### Upload the datasets to catalearn
+Next we save the data to the cloud. This way we won't have to upload the data every time we tweak the model. You'll see what this means in a second.
+```
 catalearn.save(x_train_reshape, 'x_train')
 catalearn.save(x_test_reshape, 'x_test')
 catalearn.save(y_train_onehot, 'y_train')
 catalearn.save(y_test_onehot, 'y_test')
+```
 
-# defined the function to be run
+### Defined a function to run
+Here we define a function that sets up a keras model and trains it on the dataset. We need to import the keras libraries in this function to use the GPU accelerated versions.
+
+The line ```@catalearn.run_on_gpu``` transforms the function to run in the cloud.
+
+ Note that we can just use ```catalearn.load``` to load the datasets and don't need to upload them again.
+```
 @catalearn.run_on_gpu
 def train(epochs):
 
@@ -126,6 +144,7 @@ def train(epochs):
     model.add(Activation('softmax'))
 
     model.compile(loss='categorical_crossentropy', optimizer='Adadelta', metrics=['accuracy'])
+
     model.fit(x_train_reshape, y_train_onehot, epochs=epochs, batch_size=32)
 
     # the model will be downloaded to your local machine
@@ -134,10 +153,17 @@ def train(epochs):
     loss_and_metrics = model.evaluate(x_test_reshape, y_test_onehot, batch_size=2048)
 
     return loss_and_metrics
+```
 
+### Train the model
+We can now use the function ```train()``` as a normal function. This will print all the output of the function and download the ```model.h5``` file we created into your local directory.
+
+```
 loss_and_metrics = train(5)
 print("Trained model has cost %s and test accuracy %s" % tuple(loss_and_metrics))
 ```
+
+Training with 5 epochs would take around 5 minutes on a CPU, but with Catalearn, it only takes a little over 1 minute. The difference gets bigger as you use more data and a more complex model.
 
 ## Any Questions or Suggestions?
 Please email _info@catalearn.com_ if you have any questions or suggestions.
