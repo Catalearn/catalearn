@@ -31,7 +31,7 @@ def get_available_instance():
                             'type': server_type})
     status_check(r)
     res = r.json()
-    job_hash = res['jobHash']
+    job_hash = res['hash']
     idle = res['idle']
     return (job_hash, idle)
 
@@ -39,7 +39,7 @@ def get_available_instance():
 def ping_until_gpu_start(job_hash):
     while True:
         r = requests.post('http://%s/api/gpu/checkStatus' % settings.CATALEARN_URL,
-                          data={'jobHash': job_hash})
+                          data={'hash': job_hash})
         status_check(r)
         res = r.json()
         if res['started']:

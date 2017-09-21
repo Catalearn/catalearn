@@ -158,8 +158,6 @@ def decorate_gpu_func(func):
             ping_until_gpu_start(job_hash)
             print("Server started")
 
-        print(job_hash)
-
         gpu_ip, ws_port = get_ip_and_ws_port(job_hash)
         print("Uploading data")
         upload_data(gpu_ip, job_hash, data_path)

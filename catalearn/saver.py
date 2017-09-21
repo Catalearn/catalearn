@@ -64,7 +64,7 @@ def download_from_cloud(data_name):
     for data in r.iter_content(32 * 1024):
         raw.write(data)
 
-    print("Successfully downloaded %s from the cloud" % data_name)
+    print("Successfully downloaded %s " % data_name)
 
     result = dill.loads(raw.getvalue())
     return result
