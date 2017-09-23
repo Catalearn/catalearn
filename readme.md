@@ -114,25 +114,15 @@ catalearn.save(x_test_reshape, 'x_test')
 catalearn.save(y_train_onehot, 'y_train')
 catalearn.save(y_test_onehot, 'y_test')
 ```
+### Define the model
+We will use a convolutional model with three layers. Note that we need to import the libraries within ```get_model()``` to use the GPU accelerated versions.
 
-### Defined a function to run
-Here we define a function that sets up a keras model and trains it on the dataset. We need to import the keras libraries in this function to use the GPU accelerated versions.
-
-The line ```@catalearn.run_on_gpu``` transforms the function to run in the cloud.
-
- Note that we can just use ```catalearn.load``` to load the datasets and don't need to upload them again.
 ```
-@catalearn.run_on_gpu
-def train(epochs):
+def get_model():
 
     # need to import the libraries in the function to use the GPU accelerated versions
     from keras.models import Sequential
     from keras.layers import Dense, Activation, Conv2D, Flatten, MaxPooling2D
-
-    x_train = catalearn.load('x_train')
-    x_test = catalearn.load('x_test')
-    y_train = catalearn.load('y_train')
-    y_test = catalearn.load('y_test')
 
     model = Sequential()
     model.add(Conv2D(32, (3, 3), input_shape=(28, 28, 1)))
@@ -143,15 +133,32 @@ def train(epochs):
     model.add(Dense(units=10))
     model.add(Activation('softmax'))
 
-    model.compile(loss='categorical_crossentropy', optimizer='Adadelta', metrics=['accuracy'])
+    return model
+```
 
+### Defined a function to train the model
+Here we define a function that trains the keras model on the dataset.
+
+The line ```@catalearn.run_on_gpu``` transforms the function to run in the cloud.
+
+ Note that we can just use ```catalearn.load``` to load the datasets. This way we don't need to upload them again, saving a lot of time.
+```
+@catalearn.run_on_gpu
+def train(epochs):
+
+    x_train = catalearn.load('x_train')
+    x_test = catalearn.load('x_test')
+    y_train = catalearn.load('y_train')
+    y_test = catalearn.load('y_test')
+
+    model = get_model()
+    model.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
     model.fit(x_train_reshape, y_train_onehot, epochs=epochs, batch_size=32)
 
     # the model will be downloaded to your local machine
     model.save('model.h5')
 
     loss_and_metrics = model.evaluate(x_test_reshape, y_test_onehot, batch_size=2048)
-
     return loss_and_metrics
 ```
 
