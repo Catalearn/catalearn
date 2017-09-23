@@ -21,6 +21,14 @@ or
 
 `python3 -m pip install -U catalearn`
 
+## Getting Started
+We have a few example __Jupyter Notebooks__ in [this github repository](https://github.com/Catalearn/examples). 
+
+They include:
+1. Training a CNN on the MNIST dataset
+2. Training a CNN on the CIFAR10 dataset
+3. Training a UNet model for the Carvana Image Masking dataset
+
 ## Usage
 
 ### Register for an access key
