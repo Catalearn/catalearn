@@ -103,6 +103,7 @@ def stream_output(gpu_ip, ws_port, job_hash):
         else:
             print(msgJson['message'], end='')
     ws.close()
+    return msgJson['hasResult']
 
     # if the user interrupts the job, decide whether or not to stop
     # except KeyboardInterrupt:

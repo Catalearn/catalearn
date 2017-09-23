@@ -61,7 +61,7 @@ save()
 ```
 
 ### Saving and loading data
-Use `catalearn.save` and `catalearn.load` to store the data in the cloud and download it from there. This prevents multiple data uploads when training models.
+Use `catalearn.save` and `catalearn.load` to store the data in the cloud and download it from there. This removes the need for multiple data uploads when training models.
 ```
 import numpy as np
 

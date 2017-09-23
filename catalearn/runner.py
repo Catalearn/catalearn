@@ -2,6 +2,7 @@ from __future__ import print_function
 import inspect
 import dill
 import sys
+import ast
 
 from .custom_exceptions import *
 from .connector import *
@@ -22,6 +23,24 @@ def get_source_code(func):
         source_lines = source_lines[1:]  
     source = ''.join(source_lines)
     return source
+
+def search(func, depth=1):
+    local_vars = sys._getframe(depth).f_locals
+    source = get_source_code(func)
+    tree = ast.parse(source)
+    child_funcs = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name):
+                child_funcs.append(node.func.id)
+
+    child_load_str = ''
+    for child in child_funcs:
+        if child in local_vars:
+            child_load_str += search(local_vars[child], depth=(depth+1))
+            child_load_str += '\n'
+    load_str = child_load_str + source
+    return load_str
 
 def print_new_files(new_files):
     if new_files:
@@ -81,67 +100,12 @@ def add_error_handling(run_job_func):
 
     return wrap
 
-
-# @add_error_handling
-# def reconnect_to_job():
-#     # ask for a list of unfinished jobs
-#     # this includes jobs that have finished but haven't returned the result
-#     unreturned_jobs = get_unreturned_jobs()
-#     if not unreturned_jobs:
-#         print('No running jobs')
-#         return
-
-#     # we are only looking at one job right now, may extend this in the future
-#     job_hash, status, gpu_ip, ws_port = unreturned_jobs[0]
-#     # we set the global job_hash so that we know which job to abort if things go wrong
-#     settings.CURRENT_JOB_HASH = job_hash
-#     if status == 'running':
-#         print('Job reconnected:')
-#         # reconnect the websocket
-#         stream_output(gpu_ip, ws_port, job_hash)
-#         print('Job finished') 
-#         print('Downloading result')
-#         result, new_files = get_result(job_hash)
-
-#     elif status == 'uploaded':
-#         # the GPU server has been shut down
-#         # make a call to catalearn to retrieve the result
-#         print('Job finished') 
-#         print('Downloading result')
-#         result, new_files = get_uploaded_result(job_hash)
-
-#     elif status == 'finished':
-#         # results still on the GPU
-#         print('Job finished') 
-#         print('Downloading result')
-#         result, new_files = get_result(gpu_ip, job_hash)
-    
-#     else:
-#         raise ValueError('invalid status: ' + status)
-
-#     print_new_files(new_files)
-#     print_time_credit(job_hash)
-#     return result
-
-
-# @add_error_handling
-# def stop_job():
-#     running_jobs = get_running_jobs()
-#     if running_jobs:
-#         # only dealing with one job for now
-#         job_hash, _, _, _ = running_jobs[0]
-#         abort_job(job_hash)
-#         print('Job is Now stopped')
-#     else:
-#         print('No jobs running right now')
-
-
 def decorate_gpu_func(func):
 
     @add_error_handling
     def gpu_func(*args, **kwargs):
         data = {}
-        data['source'] = get_source_code(func)
+        data['source'] = search(func, 3)
         data['args'] = args
         data['kwargs'] = kwargs
         data['name'] = func.__name__
@@ -162,16 +126,27 @@ def decorate_gpu_func(func):
         print("Uploading data")
         upload_data(gpu_ip, job_hash, data_path)
         print("Job running:")
-        stream_output(gpu_ip, ws_port, job_hash)
+        has_result = stream_output(gpu_ip, ws_port, job_hash)
         print('Job finished') 
-        print('Downloading result')
-        result, new_files = get_result(job_hash)
-        print("Done!")
-        print_new_files(new_files)
+        if has_result:
+            print('Downloading result')
+            result, new_files = get_result(job_hash)
+            print("Done!")
+            print_new_files(new_files)
         print_time_credit(job_hash)
         return result
             
-
     return gpu_func
 
+
+# @add_error_handling
+# def stop_job():
+#     running_jobs = get_running_jobs()
+#     if running_jobs:
+#         # only dealing with one job for now
+#         job_hash, _, _, _ = running_jobs[0]
+#         abort_job(job_hash)
+#         print('Job is Now stopped')
+#     else:
+#         print('No jobs running right now')
 
