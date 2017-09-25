@@ -1,4 +1,3 @@
-from __future__ import print_function
 import inspect
 import dill
 import sys
@@ -6,7 +5,6 @@ import ast
 
 from .custom_exceptions import *
 from .connector import *
-
 
 def format(sourceLines):  # removes indentation
     head = sourceLines[0]
@@ -33,12 +31,18 @@ def search(func, depth=1):
         if isinstance(node, ast.Call):
             if isinstance(node.func, ast.Name):
                 child_funcs.append(node.func.id)
+        elif (isinstance(node, ast.Name) and node.id in local_vars and callable(local_vars[node.id]) and node.id not in sys.builtin_module_names):
+            child_funcs.append(node.id)
 
     child_load_str = ''
     for child in child_funcs:
         if child in local_vars:
-            child_load_str += search(local_vars[child], depth=(depth+1))
-            child_load_str += '\n'
+            try:
+                load_string = search(local_vars[child], depth=(depth + 1))
+                child_load_str += load_string + '\n'
+            except Exception as e:
+                pass
+            
     load_str = child_load_str + source
     return load_str
 

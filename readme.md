@@ -26,8 +26,8 @@ We have a few example __Jupyter Notebooks__ in [this github repository](https://
 
 They include:
 1. Training a CNN on the MNIST dataset
-2. Training a CNN on the CIFAR10 dataset
-3. Training a UNet model for the Carvana Image Masking dataset
+2. Training a CNN on the CIFAR10 dataset (work in progress)
+3. Training a UNet model for the Carvana Image Masking dataset (work in progress)
 
 ## Usage
 
