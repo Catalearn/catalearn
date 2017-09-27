@@ -58,7 +58,7 @@ print(result)
 ### Writing to files
 Anything you save in the current directory will be downloaded to your local current directory. This is useful for saving models.
 
-The following code will create the file 'something.txt'.
+The following code will create the file 'something.txt' on the GPU, and then download it.
 ```
 @catalearn.run_on_gpu
 def save():
@@ -70,17 +70,31 @@ save()
 
 ### Saving and loading data
 Use `catalearn.save` and `catalearn.load` to store the data in the cloud and download it from there. This removes the need for multiple data uploads when training models.
+#### Save
 ```
 import numpy as np
 
 data = np.array([1,2,3,4,5])
-catalearn.save(data, 'my_data')
-
-delete data
-
-data = catalearn.load('my_data')
+catalearn.save_var(data, 'my_data')
+```
+#### Load
+```
+data = catalearn.load_var('my_data')
 print(data) 
 # [1 2 3 4 5]
+```
+
+### Uploading and downloading files
+#### Upload
+```
+with open('file.txt', 'w') as file:
+    file.write('hello world')
+
+catalearn.upload_file('file.txt', 'myfile')
+```
+#### Download
+```
+catalearn.download_file('myfile')
 ```
 
 ## Example: Train a Convolutional Neural Network on the GPU 

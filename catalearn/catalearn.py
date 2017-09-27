@@ -4,7 +4,7 @@ import dill
 import inspect
 
 from .runner import decorate_gpu_func
-from .saver import save_var_to_cloud, download_from_cloud
+from .saver import save_var_cloud, download_var_cloud, save_file_cloud, download_file_cloud
 from .admin import verify_key
 from .settings import settings
 
@@ -37,10 +37,18 @@ def run_on_gpu(func):
 #     login_check()
 #     stop_job()
 
-def save(data, name):
+def save_var(data, name):
     login_check()
-    save_var_to_cloud(data, name)
+    save_var_cloud(data, name)
 
-def load(name):
+def load_var(name):
     login_check()
-    return download_from_cloud(name)
+    return download_var_cloud(name)
+
+def upload_file(path, name):
+    login_check()
+    save_file_cloud(path, name)
+
+def download_file(name):
+    login_check()
+    download_file_cloud(name)
