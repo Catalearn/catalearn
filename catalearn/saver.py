@@ -36,15 +36,15 @@ def save_var_cloud(data_var, data_name):
         print("Successfully uploaded %s" % data_name)
     return
 
-def save_file_cloud(file_path, save_name):
+def save_file_cloud(file_path):
 
-    if not isinstance(save_name, str):
-        print("save_name must be a string")
+    if not path.exists(file_path):
+        print('%s does not exist' % file_path)
         return
 
     user_hash = settings.API_KEY
+    save_name = path.basename(file_path)
     print('Uploading %s...' % save_name)
-
     url = 'http://%s/api/save/getUploadUrl' % settings.CATALEARN_URL
     r = requests.post(url, data={
         'type': 'file',
@@ -97,6 +97,20 @@ def download_var_cloud(data_name):
 
     result = dill.loads(raw.getvalue())
     return result
+
+def download_file_url(url):
+    if not isinstance(url, str):
+        print("url must be a string")
+        return
+
+    file_name = path.basename(url)
+    res = requests.get(url, stream=True)
+    print('Downloading %s' % file_name)
+
+    with open(file_name, 'wb')as file_handle:
+        for data in res.iter_content(32 * 1024):
+            file_handle.write(data)
+    print("Download successful") 
 
 
 def download_file_cloud(file_name):
