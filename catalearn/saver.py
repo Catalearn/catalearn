@@ -98,21 +98,6 @@ def download_var_cloud(data_name):
     result = dill.loads(raw.getvalue())
     return result
 
-def download_file_url(url):
-    if not isinstance(url, str):
-        print("url must be a string")
-        return
-
-    file_name = path.basename(url)
-    res = requests.get(url, stream=True)
-    print('Downloading %s' % file_name)
-
-    with open(file_name, 'wb')as file_handle:
-        for data in res.iter_content(32 * 1024):
-            file_handle.write(data)
-    print("Download successful") 
-
-
 def download_file_cloud(file_name):
     if not isinstance(file_name, str):
         print("file_name must be a string")
@@ -139,3 +124,17 @@ def download_file_cloud(file_name):
         for data in res.iter_content(32 * 1024):
             file_handle.write(data)
     print("Download successful")
+
+def download_file_url(url):
+    if not isinstance(url, str):
+        print("url must be a string")
+        return
+
+    file_name = path.basename(url)
+    res = requests.get(url, stream=True)
+    print('Downloading %s' % file_name)
+
+    with open(file_name, 'wb')as file_handle:
+        for data in res.iter_content(32 * 1024):
+            file_handle.write(data)
+    print("Download successful") 
