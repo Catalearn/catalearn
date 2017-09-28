@@ -49,7 +49,7 @@ class Kaggle():
 
         print('Downloading %s' % file_name)
         url = 'https://www.kaggle.com/c/%s/download/%s' % (competition, file_name)
-        res = browser.get(url)
+        res = browser.get(url, stream=True)
 
         if res.status_code != 200:
             print('error downloading %s' % file_name)
