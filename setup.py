@@ -18,7 +18,8 @@ setup(
         'websocket-client',
         'requests_toolbelt',
         'tqdm',
-        'bs4'
+        'bs4',
+        'mechanicalsoup'
     ],
     python_requires='>=3'
 )
