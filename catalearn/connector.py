@@ -2,7 +2,6 @@ from __future__ import print_function
 import time
 import json
 import dill
-from tqdm import tqdm, tqdm_notebook
 import sys
 import io
 from zipfile import ZipFile
@@ -15,15 +14,10 @@ from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 from .settings import settings
 from .custom_exceptions import *
 
-def in_ipython():
-    try:
-        __IPYTHON__
-    except NameError:
-        return False
-    else:
-        return True
-
-ipython = in_ipython()
+if settings.ISIPYTHON:
+    from tqdm import tqdm_notebook as tqdm
+else:
+    from tqdm import tqdm
 
 def status_check(res):
     if res.status_code != 200:
@@ -70,10 +64,7 @@ def get_ip_and_ws_port(job_hash):
 def upload_data(gpu_ip, job_hash, data_path):
     url = 'http://%s:%s/runJobDecorator' % (gpu_ip, settings.GPU_PORT)
     file_size = path.getsize(data_path)
-    if ipython:
-        pbar = tqdm_notebook(total=file_size, unit='B', unit_scale=True)
-    else:
-        pbar = tqdm(total=file_size, unit='B', unit_scale=True)
+    pbar = tqdm(total=file_size, unit='B', unit_scale=True)
 
     def callback(monitor):
         progress = monitor.bytes_read - callback.last_bytes_read
@@ -128,15 +119,12 @@ def download_and_unzip_result(url, job_hash):
     status_check(r)
     total_size = int(r.headers.get('content-length', 0))
     with open('download.zip', 'wb') as f:
-        if ipython:
-            pbar = tqdm_notebook(total=total_size, unit='B', unit_scale=True)
-        else:
-            pbar = tqdm(total=total_size, unit='B', unit_scale=True)
+        pbar = tqdm(total=total_size, unit='B', unit_scale=True)
 
-        chunck_size = 1024 * 32  # 32kb
-        for data in r.iter_content(chunk_size=chunck_size):
+        chunk_size = 1024 * 32  # 32kb
+        for data in r.iter_content(chunk_size):
             f.write(data)
-            pbar.update(chunck_size)
+            pbar.update(chunk_size)
         # again there might be a pbar issue here
         pbar.close()
 

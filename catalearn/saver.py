@@ -1,11 +1,15 @@
 from .settings import settings
 import requests
-from tqdm import tqdm
 import io
 import dill
 from os import path
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 import sys
+
+if settings.ISIPYTHON:
+    from tqdm import tqdm_notebook as tqdm
+else:
+    from tqdm import tqdm
 
 def save_var_cloud(data_var, data_name):
     if not isinstance(data_name, str):
@@ -87,10 +91,13 @@ def download_var_cloud(data_name):
 
     total_size = int(res.headers.get('content-length', 0)); 
     raw = io.BytesIO()
+    chunk_size = 32 * 1024
+    pbar = tqdm(total=total_size, unit='B', unit_scale=True)
 
     print('Downloading %s' % data_name)
-    for data in tqdm(res.iter_content(32 * 1024), total=total_size, unit='B', unit_scale=True):
+    for data in res.iter_content(chunk_size):
         raw.write(data)
+        pbar.update(chunk_size)
 
     print("Successfully downloaded %s " % data_name)
 
@@ -120,10 +127,14 @@ def download_file_cloud(file_name):
     print('Downloading %s' % file_name)
 
     total_size = int(res.headers.get('content-length', 0)); 
-
+    chunk_size = 32 * 1024
+    pbar = tqdm(total=total_size, unit='B', unit_scale=True)
+    
     with open(file_name, 'wb')as file_handle:
-        for data in tqdm(res.iter_content(32 * 1024), total=total_size, unit='B', unit_scale=True):
+        for data in res.iter_content(chunk_size):
             file_handle.write(data)
+            pbar.update(chunk_size)
+
     print("Download successful")
     settings.record_file_download(file_name)
 

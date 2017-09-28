@@ -2,10 +2,14 @@ import sys
 import os
 import pickle
 import re
-from tqdm import tqdm
 from .settings import settings
 
 from mechanicalsoup import Browser
+
+if settings.ISIPYTHON:
+    from tqdm import tqdm_notebook as tqdm
+else:
+    from tqdm import tqdm
 
 class Kaggle():
     def __init__(self):
@@ -59,9 +63,14 @@ class Kaggle():
 
         file_name = os.path.basename(url)
 
+        pbar = tqdm(total=total_size, unit='B', unit_scale=True)
+        chunk_size = 32 * 1024
+
         with open(file_name, 'wb') as file_handle:
-            for data in tqdm(res.iter_content(32 * 1024), total=total_size, unit='B', unit_scale=True):
-                file_handle.write(data)  
+            for data in res.iter_content(chunk_size):
+                file_handle.write(data) 
+                pbar.update(chunk_size)
+                 
 
         print('%s downloaded' % file_name)
         settings.record_file_download(file_name)
