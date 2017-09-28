@@ -11,10 +11,13 @@ class Settings():
         
 
     # record the file downloads in a file so that we can get rid of them when we download the results
-    def record_file_download(self, file_name):
+    def record_file_download(self, file_name, cache=False):
         if self.SERVER:
-            with open('.download_records', 'a') as f:
-                f.write(file_name + '\n')
+            with open('.download_records', 'a') as f:             
+                if cache:
+                    f.write(file_name + ' cache\n')
+                else:
+                    f.write(file_name + '\n')
 
     def in_ipython(self):
         try:

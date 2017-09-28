@@ -20,7 +20,7 @@ class Kaggle():
             self.login_browser = self.get_login_browser(username, password)
             print('Kaggle login successful')
 
-    def download(self, competition, files):
+    def download(self, competition, files, cache=False):
         if not self.login_browser:
             print('You are not logged in, please login with kaggle.login()')
             return
@@ -28,7 +28,7 @@ class Kaggle():
         if not isinstance(files, list):
             files = [files]
         for file_name in files:
-            self.download_competition_file(competition, file_name, self.login_browser)
+            self.download_competition_file(competition, file_name, self.login_browser, cache)
 
     def get_login_browser(self, username, password):
 
@@ -49,7 +49,7 @@ class Kaggle():
 
         return browser
 
-    def download_competition_file(self, competition, file_name, browser):
+    def download_competition_file(self, competition, file_name, browser, cache):
 
         url = 'https://www.kaggle.com/c/%s/download/%s' % (competition, file_name)
         res = browser.get(url, stream=True)
@@ -70,4 +70,4 @@ class Kaggle():
                 file_handle.write(data) 
                 pbar.update(chunk_size)
                  
-        settings.record_file_download(file_name)
+        settings.record_file_download(file_name, cache)
