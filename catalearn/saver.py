@@ -83,13 +83,13 @@ def download_var_cloud(data_name):
     presigned_url = r.content
 
     # Now send the post request to the catalearn server
-    r = requests.get(presigned_url, stream=True)
+    res = requests.get(presigned_url, stream=True)
 
-    total_size = int(r.headers.get('content-length', 0))
+    total_size = int(res.headers.get('content-length', 0)); 
     raw = io.BytesIO()
 
     print('Downloading %s' % data_name)
-    for data in r.iter_content(32 * 1024):
+    for data in tqdm(res.iter_content(32 * 1024), total=total_size, unit='B', unit_scale=True):
         raw.write(data)
 
     print("Successfully downloaded %s " % data_name)
@@ -119,8 +119,10 @@ def download_file_cloud(file_name):
     res = requests.get(presigned_url, stream=True)
     print('Downloading %s' % file_name)
 
+    total_size = int(res.headers.get('content-length', 0)); 
+
     with open(file_name, 'wb')as file_handle:
-        for data in res.iter_content(32 * 1024):
+        for data in tqdm(res.iter_content(32 * 1024), total=total_size, unit='B', unit_scale=True):
             file_handle.write(data)
     print("Download successful")
     settings.record_file_download(file_name)
