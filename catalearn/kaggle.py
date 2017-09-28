@@ -51,7 +51,6 @@ class Kaggle():
 
     def download_competition_file(self, competition, file_name, browser):
 
-        print('Downloading %s' % file_name)
         url = 'https://www.kaggle.com/c/%s/download/%s' % (competition, file_name)
         res = browser.get(url, stream=True)
 
@@ -63,7 +62,7 @@ class Kaggle():
 
         file_name = os.path.basename(url)
 
-        pbar = tqdm(total=total_size, unit='B', unit_scale=True)
+        pbar = tqdm(total=total_size, unit='B', unit_scale=True, desc=file_name)
         chunk_size = 32 * 1024
 
         with open(file_name, 'wb') as file_handle:
@@ -71,6 +70,4 @@ class Kaggle():
                 file_handle.write(data) 
                 pbar.update(chunk_size)
                  
-
-        print('%s downloaded' % file_name)
         settings.record_file_download(file_name)
