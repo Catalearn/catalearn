@@ -67,6 +67,15 @@ def save_file_cloud(file_path):
         print("Successfully uploaded %s" % save_name)
     return
 
+def download_progress(res, stream, save_name):
+    total_size = int(res.headers.get('content-length', 0)); 
+    
+    chunk_size = 32 * 1024
+    pbar = tqdm(total=total_size, unit='B', unit_scale=True, desc=save_name)
+
+    for data in res.iter_content(chunk_size):
+        stream.write(data)
+        pbar.update(chunk_size)
 
 def download_var_cloud(data_name):
     if not isinstance(data_name, str):
@@ -89,17 +98,8 @@ def download_var_cloud(data_name):
     # Now send the post request to the catalearn server
     res = requests.get(presigned_url, stream=True)
 
-    total_size = int(res.headers.get('content-length', 0)); 
     raw = io.BytesIO()
-    chunk_size = 32 * 1024
-    pbar = tqdm(total=total_size, unit='B', unit_scale=True)
-
-    print('Downloading %s' % data_name)
-    for data in res.iter_content(chunk_size):
-        raw.write(data)
-        pbar.update(chunk_size)
-
-    print("Successfully downloaded %s " % data_name)
+    download_progress(res, raw, data_name)
 
     result = dill.loads(raw.getvalue())
     return result
@@ -124,18 +124,10 @@ def download_file_cloud(file_name):
 
     # Now send the post request to the catalearn server
     res = requests.get(presigned_url, stream=True)
-    print('Downloading %s' % file_name)
-
-    total_size = int(res.headers.get('content-length', 0)); 
-    chunk_size = 32 * 1024
-    pbar = tqdm(total=total_size, unit='B', unit_scale=True)
     
     with open(file_name, 'wb')as file_handle:
-        for data in res.iter_content(chunk_size):
-            file_handle.write(data)
-            pbar.update(chunk_size)
+        download_progress(res, file_handle, file_name)
 
-    print("Download successful")
     settings.record_file_download(file_name)
 
 def download_file_url(url):
@@ -145,10 +137,8 @@ def download_file_url(url):
 
     file_name = path.basename(url)
     res = requests.get(url, stream=True)
-    print('Downloading %s' % file_name)
 
     with open(file_name, 'wb')as file_handle:
-        for data in res.iter_content(32 * 1024):
-            file_handle.write(data)
-    print("Download successful") 
+        download_progress(res, file_handle, file_name)
+
     settings.record_file_download(file_name)
