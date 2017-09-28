@@ -13,13 +13,13 @@ class Kaggle():
     def login(self, username, password):
         if not self.login_browser:
             self.login_browser = self.get_login_browser(username, password)
-            print('Login successful')
+            print('Kaggle login successful')
 
     def download(self, competition, files):
         if not self.login_browser:
             print('You are not logged in, please login with kaggle.login()')
             return
-        
+
         if not isinstance(files, list):
             files = [files]
         for file_name in files:
