@@ -46,6 +46,7 @@ class Kaggle():
 
     def download_competition_file(self, competition, file_name, browser):
 
+        print('Downloading %s' % file_name)
         url = 'https://www.kaggle.com/c/%s/download/%s' % (competition, file_name)
         res = browser.get(url)
 
