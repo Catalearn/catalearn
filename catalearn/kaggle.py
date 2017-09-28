@@ -2,6 +2,7 @@ import sys
 import os
 import pickle
 import re
+from tqdm import tqdm
 from .settings import settings
 
 from mechanicalsoup import Browser
@@ -55,7 +56,10 @@ class Kaggle():
             return
 
         file_name = os.path.basename(url)
-        with open(file_name, 'wb') as f:
-            f.write(res.content)
+
+        with open(file_name, 'wb') as file_handle:
+            for data in tqdm(res.iter_content(32 * 1024)):
+                file_handle.write(data)  
+
         print('%s downloaded' % file_name)
         settings.record_file_download(file_name)
