@@ -51,6 +51,8 @@ class Kaggle():
         url = 'https://www.kaggle.com/c/%s/download/%s' % (competition, file_name)
         res = browser.get(url, stream=True)
 
+        total_size = int(res.headers.get('content-length', 0)); 
+
         if res.status_code != 200:
             print('error downloading %s' % file_name)
             return
@@ -58,7 +60,7 @@ class Kaggle():
         file_name = os.path.basename(url)
 
         with open(file_name, 'wb') as file_handle:
-            for data in tqdm(res.iter_content(32 * 1024)):
+            for data in tqdm(res.iter_content(32 * 1024), total=total_size, unit='B', unit_scale=True):
                 file_handle.write(data)  
 
         print('%s downloaded' % file_name)
