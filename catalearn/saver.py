@@ -7,7 +7,6 @@ from os import path
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 import sys
 
-
 def save_var_cloud(data_var, data_name):
     if not isinstance(data_name, str):
         print("data_name must be a string")
@@ -124,6 +123,7 @@ def download_file_cloud(file_name):
         for data in res.iter_content(32 * 1024):
             file_handle.write(data)
     print("Download successful")
+    settings.record_file_download(file_name)
 
 def download_file_url(url):
     if not isinstance(url, str):
@@ -138,3 +138,4 @@ def download_file_url(url):
         for data in res.iter_content(32 * 1024):
             file_handle.write(data)
     print("Download successful") 
+    settings.record_file_download(file_name)

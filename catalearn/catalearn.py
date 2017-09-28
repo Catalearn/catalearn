@@ -8,10 +8,16 @@ from .saver import (save_var_cloud, download_var_cloud, save_file_cloud,
     download_file_cloud, download_file_url)
 from .admin import verify_key
 from .settings import settings
+from .kaggle import Kaggle
 
 def set_debug():
     settings.LOCAL = True
     settings.CATALEARN_URL = 'localhost:8080'
+    print('running in debug mode')
+
+def set_server():
+    settings.SERVER = True
+    print('running in server mode')
 
 def login(key):
     verified = verify_key(key)
@@ -56,3 +62,5 @@ def download_file(name):
 
 def download_from_url(url):
     download_file_url(url)
+
+kaggle = Kaggle()
