@@ -7,8 +7,8 @@ class Settings():
         self.GPU_PORT = 8000
         self.CURRENT_JOB_HASH = None
         self.SERVER = False
-        self.ISIPYTHON = self.in_ipython()
-        
+        self.IS_IPYTHON = self.in_ipython()
+        self.CACHE_PATH = None
 
     # record the file downloads in a file so that we can get rid of them when we download the results
     def record_file_download(self, file_name, cache=False):

@@ -6,7 +6,7 @@ from .settings import settings
 
 from mechanicalsoup import Browser
 
-if settings.ISIPYTHON:
+if settings.IS_IPYTHON:
     from tqdm import tqdm_notebook as tqdm
 else:
     from tqdm import tqdm
@@ -17,20 +17,37 @@ class Kaggle():
 
     def login(self, username, password):
         if not self.login_browser:
-            self.login_browser = self.get_login_browser(username, password)
+            self.login_browser = self.__get_login_browser(username, password)
             print('Kaggle login successful')
 
     def download(self, competition, files, cache=False):
         if not self.login_browser:
-            print('You are not logged in, please login with kaggle.login()')
+            print('Please log in to Kaggle with catalearn.kaggle.login()')
             return
 
         if not isinstance(files, list):
             files = [files]
         for file_name in files:
-            self.download_competition_file(competition, file_name, self.login_browser, cache)
+            cache_path = self.__maybe_get_cache_path(file_name)
+            if cache_path:
+                os.rename(cache_path, file_name)
+                print('Using cached %s' % file_name)
+                success = True
+            else:
+                success = self.__download_competition_file(competition, file_name, self.login_browser)
+            if success: 
+                settings.record_file_download(file_name, cache)
 
-    def get_login_browser(self, username, password):
+
+    def __maybe_get_cache_path(self, file_name):
+        if not settings.SERVER or not settings.CACHE_PATH:
+            return None
+
+        all_cached = os.listdir(settings.CACHE_PATH)
+        if file_name in all_cached:
+            return os.path.join(settings.CACHE_PATH, file_name)
+
+    def __get_login_browser(self, username, password):
 
         pickle_path = os.path.join('browser.pickle')
         login_url = 'https://www.kaggle.com/account/login'
@@ -49,7 +66,7 @@ class Kaggle():
 
         return browser
 
-    def download_competition_file(self, competition, file_name, browser, cache):
+    def __download_competition_file(self, competition, file_name, browser):
 
         url = 'https://www.kaggle.com/c/%s/download/%s' % (competition, file_name)
         res = browser.get(url, stream=True)
@@ -58,7 +75,7 @@ class Kaggle():
 
         if res.status_code != 200:
             print('error downloading %s' % file_name)
-            return
+            return False
 
         file_name = os.path.basename(url)
 
@@ -69,5 +86,5 @@ class Kaggle():
             for data in res.iter_content(chunk_size):
                 file_handle.write(data) 
                 pbar.update(chunk_size)
-                 
-        settings.record_file_download(file_name, cache)
+
+        return True

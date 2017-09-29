@@ -129,9 +129,9 @@ def decorate_gpu_func(func):
         gpu_ip, ws_port = get_ip_and_ws_port(job_hash)
         print("Uploading data")
         upload_data(gpu_ip, job_hash, data_path)
-        print("Job running:")
+        print("Job running:\n")
         has_result = stream_output(gpu_ip, ws_port, job_hash)
-        print('Job finished') 
+        print('\nJob finished') 
         if has_result:
             print('Downloading result')
             result, new_files = get_result(job_hash)

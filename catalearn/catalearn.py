@@ -15,9 +15,13 @@ def set_debug():
     settings.CATALEARN_URL = 'localhost:8080'
     print('running in debug mode')
 
+def set_cache_path(cache_path):
+    settings.CACHE_PATH= cache_path
+    print('cache stored in %s' % cache_path)
+
 def set_server():
     settings.SERVER = True
-    print('running in server mode')
+    print('running as server')
 
 def login(key):
     verified = verify_key(key)

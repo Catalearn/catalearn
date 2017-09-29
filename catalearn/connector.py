@@ -14,7 +14,7 @@ from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 from .settings import settings
 from .custom_exceptions import *
 
-if settings.ISIPYTHON:
+if settings.IS_IPYTHON:
     from tqdm import tqdm_notebook as tqdm
 else:
     from tqdm import tqdm

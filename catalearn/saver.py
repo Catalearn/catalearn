@@ -6,7 +6,7 @@ from os import path
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 import sys
 
-if settings.ISIPYTHON:
+if settings.IS_IPYTHON:
     from tqdm import tqdm_notebook as tqdm
 else:
     from tqdm import tqdm
